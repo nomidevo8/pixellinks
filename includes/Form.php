@@ -311,10 +311,10 @@ class Form {
                         <div class="dsf-package-option">
                             <label>
                                 <input type="radio" name="package" 
-                                       value="<?php echo esc_attr($package['id']); ?>"
+                                       value="<?php echo esc_attr($package['package_type_id']); ?>"
                                        data-price="<?php echo esc_attr($package['price'] ?? ''); ?>"
                                        required>
-                                <strong><?php echo esc_html($package['package_type']); ?></strong>
+                                <strong><?php echo esc_html($package['package_type_name']); ?></strong>
                                 <?php if (!empty($package['description'])) : ?>
                                     <p><?php echo esc_html($package['description']); ?></p>
                                 <?php endif; ?>

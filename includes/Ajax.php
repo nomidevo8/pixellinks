@@ -96,19 +96,19 @@ class Ajax {
             case 'state_based':
                 if ($state_id) {
                     // state_id is actually location_id in the new schema
-                    $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $state_id);
-                    
-                    if ($pricing) {
-                        if ($service->get('has_packages') && $package_id) {
-                            $package = new Package($package_id);
-                            $location_price = ($package->get('package_type') === 'Premium' && $pricing['premium_price'] !== null)
-                                ? floatval($pricing['premium_price'])
-                                : floatval($pricing['standard_price'] ?? 0);
-                            $total_price = $location_price;
-                            $breakdown['location'] = $pricing['location_name'];
-                            $breakdown['package'] = $package->get('package_type');
-                            $breakdown['price'] = $location_price;
-                        } else {
+                    if ($service->get('has_packages') && $package_id) {
+                        // Package pricing model: get price from ServicePackagePricing
+                        $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service->get_id(), $package_id);
+                        if ($package_pricing) {
+                            $total_price = floatval($package_pricing['price'] ?? 0);
+                            $breakdown['location'] = '';
+                            $breakdown['package'] = $package_pricing['package_type_name'] ?? 'Unknown';
+                            $breakdown['price'] = $total_price;
+                        }
+                    } else {
+                        // No packages: use location-based pricing (base tier = standard_price)
+                        $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $state_id);
+                        if ($pricing) {
                             $total_price = floatval($pricing['standard_price'] ?? 0);
                             $breakdown['location'] = $pricing['location_name'];
                             $breakdown['price'] = $total_price;
@@ -292,15 +292,16 @@ class Ajax {
             case 'state_based':
                 if (!empty($form_data['state'])) {
                     // form_data['state'] contains location_id
-                    $pricing = ServiceLocationPricing::get_by_service_and_location($service_id, $form_data['state']);
-                    
-                    if ($pricing) {
-                        if ($service->get('has_packages') && !empty($form_data['package'])) {
-                            $package = new Package($form_data['package']);
-                            $total_price = ($package->get('package_type') === 'Premium' && $pricing['premium_price'] !== null)
-                                ? floatval($pricing['premium_price'])
-                                : floatval($pricing['standard_price'] ?? 0);
-                        } else {
+                    if ($service->get('has_packages') && !empty($form_data['package'])) {
+                        // Package pricing: get price from ServicePackagePricing
+                        $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service_id, $form_data['package']);
+                        if ($package_pricing) {
+                            $total_price = floatval($package_pricing['price'] ?? 0);
+                        }
+                    } else {
+                        // Location pricing: use standard_price tier
+                        $pricing = ServiceLocationPricing::get_by_service_and_location($service_id, $form_data['state']);
+                        if ($pricing) {
                             $total_price = floatval($pricing['standard_price'] ?? 0);
                         }
                     }

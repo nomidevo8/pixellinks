@@ -53,20 +53,33 @@ class Database {
             KEY enabled (enabled)
         ) $charset_collate;";
         
-        // Packages table
-        $packages_table = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}dsf_packages (
+        // PackageTypes table (normalized - stores package types once)
+        $package_types_table = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}dsf_package_types (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            package_type_name VARCHAR(100) NOT NULL UNIQUE,
+            description LONGTEXT,
+            enabled TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            KEY enabled (enabled)
+        ) $charset_collate;";
+        
+        // Service-PackageType Pricing table (junction/pivot table)
+        $service_package_pricing_table = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}dsf_service_package_pricing (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             service_id BIGINT UNSIGNED NOT NULL,
-            package_type VARCHAR(100) NOT NULL,
+            package_type_id BIGINT UNSIGNED NOT NULL,
             price DECIMAL(10, 2),
             description LONGTEXT,
             enabled TINYINT(1) NOT NULL DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_service_package (service_id, package_type_id),
             KEY service_id (service_id),
-            KEY package_type (package_type),
+            KEY package_type_id (package_type_id),
             KEY enabled (enabled),
-            FOREIGN KEY (service_id) REFERENCES {$wpdb->prefix}dsf_services(id) ON DELETE CASCADE
+            FOREIGN KEY (service_id) REFERENCES {$wpdb->prefix}dsf_services(id) ON DELETE CASCADE,
+            FOREIGN KEY (package_type_id) REFERENCES {$wpdb->prefix}dsf_package_types(id) ON DELETE CASCADE
         ) $charset_collate;";
         
         // Locations table (normalized - stores states/regions once)
@@ -139,7 +152,8 @@ class Database {
         // Execute table creation
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($services_table);
-        dbDelta($packages_table);
+        dbDelta($package_types_table);
+        dbDelta($service_package_pricing_table);
         dbDelta($locations_table);
         dbDelta($service_location_pricing_table);
         dbDelta($portals_table);
@@ -154,9 +168,10 @@ class Database {
         
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_submissions");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_portals");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_service_package_pricing");
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_package_types");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_service_location_pricing");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_locations");
-        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_packages");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_services");
     }
 

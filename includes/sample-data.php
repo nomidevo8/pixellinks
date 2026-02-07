@@ -27,7 +27,19 @@ function create_sample_data() {
         return; // Sample data already exists
     }
 
-    // STEP 1: Create reusable locations (normalized - stored once)
+    // STEP 1: Create reusable package types (stored once)
+    $package_types_data = [ 'Standard', 'Premium', 'Enterprise' ];
+    $package_type_ids = [];
+    foreach ( $package_types_data as $pt_name ) {
+        $pt_id = PackageType::save( [
+            'package_type_name' => $pt_name,
+            'description'       => ucfirst( $pt_name ) . ' package option',
+            'enabled'           => 1,
+        ] );
+        $package_type_ids[ $pt_name ] = $pt_id;
+    }
+
+    // STEP 2: Create reusable locations (normalized - stored once)
     $sample_locations_data = [
         [ 'name' => 'Alabama', 'code' => 'AL' ],
         [ 'name' => 'Alaska', 'code' => 'AK' ],
@@ -69,8 +81,8 @@ function create_sample_data() {
         $location_ids[ $country ] = $location_id;
     }
 
-    // STEP 2: Service 1: DBA Fictitious Name (State-based with packages)
-    // Different prices per state!
+    // STEP 3: Service 1: DBA Fictitious Name (State-based with packages)
+    // SAME PACKAGE TYPES, DIFFERENT PRICES per service!
     $service_1_id = Service::save( [
         'type'          => 'USA',
         'category'      => 'Core Company',
@@ -81,56 +93,33 @@ function create_sample_data() {
         'enabled'       => 1,
     ] );
 
-    // Packages for Service 1
-    Package::save( [
-        'service_id'   => $service_1_id,
-        'package_type' => 'Standard',
-        'price'        => 0,
-        'description'  => 'Basic filing with government agency',
-        'enabled'      => 1,
+    // Link Service 1 to package types with DIFFERENT PRICING
+    ServicePackagePricing::save( [
+        'service_id'     => $service_1_id,
+        'package_type_id' => $package_type_ids['Standard'],
+        'price'          => 99.99,
+        'description'    => 'Basic filing with government agency',
+        'enabled'        => 1,
     ] );
 
-    Package::save( [
-        'service_id'   => $service_1_id,
-        'package_type' => 'Premium',
-        'price'        => 50.00,
-        'description'  => 'Includes filing + registered agent + consultation',
-        'enabled'      => 1,
+    ServicePackagePricing::save( [
+        'service_id'     => $service_1_id,
+        'package_type_id' => $package_type_ids['Premium'],
+        'price'          => 149.99,
+        'description'    => 'Includes filing + registered agent + consultation',
+        'enabled'        => 1,
     ] );
 
-    // Link Service 1 to each state with different pricing
-    $service1_pricing = [
-        'Alabama'     => [ 'standard' => 79.99, 'premium' => 129.99 ],
-        'Alaska'      => [ 'standard' => 99.99, 'premium' => 169.99 ],
-        'Arizona'     => [ 'standard' => 89.99, 'premium' => 139.99 ],
-        'Arkansas'    => [ 'standard' => 74.99, 'premium' => 124.99 ],
-        'California'  => [ 'standard' => 149.99, 'premium' => 199.99 ],
-        'Colorado'    => [ 'standard' => 94.99, 'premium' => 144.99 ],
-        'Connecticut' => [ 'standard' => 104.99, 'premium' => 154.99 ],
-        'Delaware'    => [ 'standard' => 119.99, 'premium' => 169.99 ],
-        'Florida'     => [ 'standard' => 89.99, 'premium' => 139.99 ],
-        'Georgia'     => [ 'standard' => 79.99, 'premium' => 129.99 ],
-        'Hawaii'      => [ 'standard' => 99.99, 'premium' => 169.99 ],
-        'Idaho'       => [ 'standard' => 84.99, 'premium' => 134.99 ],
-        'Illinois'    => [ 'standard' => 114.99, 'premium' => 164.99 ],
-        'Indiana'     => [ 'standard' => 79.99, 'premium' => 129.99 ],
-        'Iowa'        => [ 'standard' => 74.99, 'premium' => 124.99 ],
-    ];
+    ServicePackagePricing::save( [
+        'service_id'     => $service_1_id,
+        'package_type_id' => $package_type_ids['Enterprise'],
+        'price'          => 199.99,
+        'description'    => 'Full service with ongoing support and renewals',
+        'enabled'        => 1,
+    ] );
 
-    foreach ( $service1_pricing as $state_name => $prices ) {
-        if ( isset( $location_ids[ $state_name ] ) ) {
-            ServiceLocationPricing::save( [
-                'service_id'     => $service_1_id,
-                'location_id'    => $location_ids[ $state_name ],
-                'standard_price' => $prices['standard'],
-                'premium_price'  => $prices['premium'],
-                'enabled'        => 1,
-            ] );
-        }
-    }
-
-    // STEP 3: Service 2: EIN with IRS (State-based with packages)
-    // SAME LOCATIONS, DIFFERENT PRICING for each state
+    // STEP 4: Service 2: EIN with IRS (State-based with packages)
+    // SAME PACKAGE TYPES, DIFFERENT PRICING than Service 1!
     $service_2_id = Service::save( [
         'type'          => 'USA',
         'category'      => 'Core Company',
@@ -141,37 +130,32 @@ function create_sample_data() {
         'enabled'       => 1,
     ] );
 
-    // Packages for Service 2
-    Package::save( [
-        'service_id'   => $service_2_id,
-        'package_type' => 'Standard',
-        'price'        => 0,
-        'description'  => 'EIN application processing',
-        'enabled'      => 1,
+    // Link Service 2 to SAME package types but with DIFFERENT pricing
+    ServicePackagePricing::save( [
+        'service_id'     => $service_2_id,
+        'package_type_id' => $package_type_ids['Standard'],
+        'price'          => 49.99,
+        'description'    => 'EIN application processing',
+        'enabled'        => 1,
     ] );
 
-    Package::save( [
-        'service_id'   => $service_2_id,
-        'package_type' => 'Premium',
-        'price'        => 50.00,
-        'description'  => 'EIN application + IRS consultation + expedited processing',
-        'enabled'      => 1,
+    ServicePackagePricing::save( [
+        'service_id'     => $service_2_id,
+        'package_type_id' => $package_type_ids['Premium'],
+        'price'          => 99.99,
+        'description'    => 'EIN application + IRS consultation + expedited processing',
+        'enabled'        => 1,
     ] );
 
-    // Service 2 uniform pricing (no variation per state)
-    foreach ( array_keys( $location_ids ) as $state_name ) {
-        if ( in_array( $state_name, array_keys( $service1_pricing ) ) ) {
-            ServiceLocationPricing::save( [
-                'service_id'     => $service_2_id,
-                'location_id'    => $location_ids[ $state_name ],
-                'standard_price' => 49.99,
-                'premium_price'  => 99.99,
-                'enabled'        => 1,
-            ] );
-        }
-    }
+    ServicePackagePricing::save( [
+        'service_id'     => $service_2_id,
+        'package_type_id' => $package_type_ids['Enterprise'],
+        'price'          => 149.99,
+        'description'    => 'Full EIN service with ongoing tax support',
+        'enabled'        => 1,
+    ] );
 
-    // STEP 4: Service 3: Multi-State Filing (Portal-based, no packages)
+    // STEP 5: Service 3: Multi-State Filing (Portal-based, no packages)
     $service_3_id = Service::save( [
         'type'          => 'USA',
         'category'      => 'Compliance',
@@ -211,7 +195,7 @@ function create_sample_data() {
         'enabled'     => 1,
     ] );
 
-    // STEP 5: Service 4: Business License (Fixed Price)
+    // STEP 6: Service 4: Business License (Fixed Price)
     $service_4_id = Service::save( [
         'type'          => 'USA',
         'category'      => 'Permits & Licenses',
@@ -222,7 +206,7 @@ function create_sample_data() {
         'enabled'       => 1,
     ] );
 
-    // STEP 6: Service 5: Calculator-Based Service
+    // STEP 7: Service 5: Calculator-Based Service
     $service_5_id = Service::save( [
         'type'          => 'USA',
         'category'      => 'Custom Services',
@@ -233,8 +217,7 @@ function create_sample_data() {
         'enabled'       => 1,
     ] );
 
-    // STEP 7: Service 6: UK Company Formation (State-based, no packages)
-    // Uses UK locations (regions)
+    // STEP 8: Service 6: UK Company Formation (State-based, no packages)
     $service_6_id = Service::save( [
         'type'          => 'UK',
         'category'      => 'Core Company',
@@ -245,7 +228,7 @@ function create_sample_data() {
         'enabled'       => 1,
     ] );
 
-    // Link UK service to regions
+    // Link UK service to regions (location-based without packages)
     foreach ( [ 'England', 'Scotland', 'Wales' ] as $country ) {
         ServiceLocationPricing::save( [
             'service_id'     => $service_6_id,
@@ -256,7 +239,7 @@ function create_sample_data() {
         ] );
     }
 
-    // STEP 8: Service 7: Federal Tax ID
+    // STEP 9: Service 7: Federal Tax ID
     $service_7_id = Service::save( [
         'type'          => 'Federal',
         'category'      => 'Tax Services',

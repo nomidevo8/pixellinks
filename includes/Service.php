@@ -202,14 +202,14 @@ class Service {
     public function get_data() {
         return $this->data;
     }
-
     /**
      * Get all packages for this service
+     * Uses the normalized package types with service-package pricing
      *
      * @return array
      */
     public function get_packages() {
-        return Package::get_by_service($this->id);
+        return ServicePackagePricing::get_by_service($this->id);
     }
 
     /**
