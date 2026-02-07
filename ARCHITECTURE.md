@@ -1,15 +1,15 @@
-# Dynamic Services Form Plugin - Complete Documentation
+# Dynamic Services Form Plugin - Complete Architecture Documentation
 
 ## Overview
 
-The **Dynamic Services Form Plugin** is a production-ready WordPress plugin that enables you to create sophisticated, fully-featured multi-step forms with dynamic pricing, service management, and form submission tracking.
+The **Dynamic Services Form Plugin** is a production-ready WordPress plugin with **fully normalized database** architecture for creating sophisticated multi-step forms with dynamic pricing, location management, package handling, and comprehensive submission tracking.
 
 Built with:
-- **OOP PHP** - Clean, maintainable class-based architecture
-- **Custom Database Tables** - Dedicated database for services, packages, states, portals, and submissions
-- **Vanilla JavaScript** - No jQuery dependency required (though jQuery is used for AJAX compatibility)
-- **Responsive Design** - Mobile-friendly form and admin interface
-- **WordPress Best Practices** - Security, performance, and extensibility
+- **OOP PHP** - Clean, maintainable object-oriented architecture (11 classes)
+- **Normalized Database Schema** - 7 tables with junction patterns (Locations & Packages stored once, linked to services)
+- **Vanilla JavaScript** - No jQuery dependency (though jQuery compatible)
+- **Responsive Design** - Mobile-first form and admin interface
+- **WordPress Best Practices** - Security, performance, extensibility, and nonce verification
 
 ---
 
@@ -19,52 +19,69 @@ Built with:
 
 1. **4-Step Form Workflow**
    - Service Selection
-   - Dynamic Pricing Options
-   - Contact Information
+   - Location & Pricing Selection
+   - Contact Information (9 required fields)
    - Review & Submit
 
-2. **Multiple Pricing Models**
-   - **State-based**: Users select state + optional package
-   - **Portal-based**: Users select multiple portals (additive pricing)
+2. **Universal Pricing Toggle**
+   - Single Price: `is_universal=1` - One price per location
+   - Tiered Pricing: `is_universal=0` - Standard/Premium pricing
+   - Toggle per location in admin
+
+3. **Multiple Pricing Models**
+   - **State-based**: Users select location + optional package
+   - **Portal-based**: Users select multiple portals (additive)
    - **Fixed price**: Single set price
-   - **Calculator**: User inputs amount (custom formula)
+   - **Calculator**: User inputs amount
 
-3. **Admin Management Panel**
-   - Services: Create, edit, delete services
-   - Packages: Manage Standard/Premium options
-   - States: Add states with per-state pricing
-   - Portals: Add portals with individual prices
-   - Submissions: View all form submissions
+4. **9-Field Contact Form**
+   - First Name, Last Name (required)
+   - Business Name, Address, City, State, Zipcode (required)
+   - Email, Phone (required)
+   - Entity Type, Additional Notes (optional)
 
-4. **Query Parameter Support**
-   - Pre-select services via URL: `?service_type=usa&service_category=core&service_name=dba`
+5. **Normalized Database Design**
+   - Locations stored once, reused across services
+   - Package types stored once, reused across services
+   - Each service-location-pricing independently configured
+   - No data duplication
+
+6. **Admin Management Panel** (7 menus)
+   - Services
+   - Locations
+   - Service Location Pricing (with universal price toggle)
+   - Package Types
+   - Service Package Pricing
+   - Submissions
+   - Settings
+
+7. **Query Parameter Support**
+   - Pre-select services via URL
    - Automatically skips service selection step
    - Direct deep-linking to specific services
 
-5. **Real-Time Price Calculation**
+8. **Real-Time Price Calculation**
    - Updates as users make selections
    - AJAX-powered without page reloads
-   - Visual price breakdown on review step
+   - Price breakdown on review step
 
-6. **Form Submission Tracking**
-   - All submissions stored in database
-   - Track business name, email, phone, entity type
-   - Record total price and submission date
+9. **Form Submission Tracking**
+   - All submissions with 11 fields stored
+   - Track service, location, package, contact info
    - Submission status management
 
 ---
 
-## Database Schema
+## Database Schema - 7 Normalized Tables
 
 ### wp_dsf_services
 ```sql
 CREATE TABLE wp_dsf_services (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    type VARCHAR(100),              -- "USA", "UK", "Federal", etc.
-    category VARCHAR(100),           -- "Core Company", "Banking", etc.
-    name VARCHAR(255),               -- "DBA Fictitious Name", etc.
-    pricing_model VARCHAR(50),       -- "state_based", "portal_based", "fixed_price", "calculator"
-    has_packages TINYINT(1),         -- 1 if service has Standard/Premium packages
+    type VARCHAR(100),              -- "USA", "UK", "Federal"
+    category VARCHAR(100),          -- "Core Company", "Banking"
+    name VARCHAR(255),              -- "DBA Fictitious Name"
+    pricing_model VARCHAR(50),      -- "state_based", "portal_based", "fixed_price", "calculator"
     description LONGTEXT,
     enabled TINYINT(1),
     created_at DATETIME,
@@ -72,44 +89,59 @@ CREATE TABLE wp_dsf_services (
 )
 ```
 
-### wp_dsf_packages
+### wp_dsf_locations (NEW - Stored Once, Reused)
 ```sql
-CREATE TABLE wp_dsf_packages (
+CREATE TABLE wp_dsf_locations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    service_id BIGINT,               -- Foreign key to services
-    package_type VARCHAR(100),       -- "Standard", "Premium", etc.
-    price DECIMAL(10, 2),            -- NULL = Free
+    name VARCHAR(255),              -- "California", "Texas", "UK"
+    created_at DATETIME,
+    updated_at DATETIME
+)
+```
+
+### wp_dsf_service_location_pricing (NEW - Junction Table)
+```sql
+CREATE TABLE wp_dsf_service_location_pricing (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    service_id BIGINT,              -- Foreign key to services
+    location_id BIGINT,             -- Foreign key to locations
+    standard_price DECIMAL(10, 2),  -- Used for both universal and tiered
+    premium_price DECIMAL(10, 2),   -- NULL if universal pricing
+    is_universal TINYINT(1),        -- 1=single price, 0=tiered (Standard/Premium)
+    enabled TINYINT(1),
+    created_at DATETIME,
+    updated_at DATETIME,
+    UNIQUE(service_id, location_id)
+)
+```
+
+**Key Feature**: `is_universal` flag
+- When 1: Show only one price (standard_price)
+- When 0: Show Standard/Premium pricing
+
+### wp_dsf_package_types (NEW - Stored Once, Reused)
+```sql
+CREATE TABLE wp_dsf_package_types (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255),              -- "Standard", "Premium", "Enterprise"
     description LONGTEXT,
-    enabled TINYINT(1),
     created_at DATETIME,
-    updated_at DATETIME
+    updated_at DATETIME,
+    UNIQUE(name)
 )
 ```
 
-### wp_dsf_states
+### wp_dsf_service_package_pricing (NEW - Junction Table)
 ```sql
-CREATE TABLE wp_dsf_states (
+CREATE TABLE wp_dsf_service_package_pricing (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    service_id BIGINT,               -- Foreign key to services
-    state_name VARCHAR(100),         -- "California", "Texas", etc.
-    standard_price DECIMAL(10, 2),   -- Standard tier pricing
-    premium_price DECIMAL(10, 2),    -- Premium tier pricing (if packages enabled)
+    service_id BIGINT,              -- Foreign key to services
+    package_type_id BIGINT,         -- Foreign key to package_types
+    price DECIMAL(10, 2),
     enabled TINYINT(1),
     created_at DATETIME,
-    updated_at DATETIME
-)
-```
-
-### wp_dsf_portals
-```sql
-CREATE TABLE wp_dsf_portals (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    service_id BIGINT,               -- Foreign key to services
-    portal_name VARCHAR(255),        -- "Secretary of State", "IRS", etc.
-    price DECIMAL(10, 2),            -- NULL = Free
-    enabled TINYINT(1),
-    created_at DATETIME,
-    updated_at DATETIME
+    updated_at DATETIME,
+    UNIQUE(service_id, package_type_id)
 )
 ```
 
@@ -117,15 +149,35 @@ CREATE TABLE wp_dsf_portals (
 ```sql
 CREATE TABLE wp_dsf_submissions (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    service_id BIGINT,               -- Foreign key to services
-    form_data LONGTEXT,              -- JSON of all form selections
-    total_price DECIMAL(10, 2),
+    service_id BIGINT,
+    location_id BIGINT,
+    package_id BIGINT,
+    first_name VARCHAR(255),        -- NEW
+    last_name VARCHAR(255),         -- NEW
     business_name VARCHAR(255),
+    business_address VARCHAR(255),  -- NEW
+    city VARCHAR(255),              -- NEW
+    state VARCHAR(255),             -- Address state, state/province -- NEW
+    zipcode VARCHAR(20),            -- NEW
     email VARCHAR(255),
     phone VARCHAR(20),
-    entity_type VARCHAR(100),
+    entity_type VARCHAR(100),       -- Optional
     notes LONGTEXT,
-    status VARCHAR(50),              -- "pending", "processed", etc.
+    total_price DECIMAL(10, 2),
+    status VARCHAR(50),
+    created_at DATETIME,
+    updated_at DATETIME
+)
+```
+
+### wp_dsf_portals (LEGACY - For portal-based pricing)
+```sql
+CREATE TABLE wp_dsf_portals (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    service_id BIGINT,
+    portal_name VARCHAR(255),
+    price DECIMAL(10, 2),
+    enabled TINYINT(1),
     created_at DATETIME,
     updated_at DATETIME
 )
@@ -133,20 +185,57 @@ CREATE TABLE wp_dsf_submissions (
 
 ---
 
-## Class Structure
+## Normalization Benefits
+
+**Before (Old Schema - Data Duplication):**
+```
+Service "DBA Filing" had 15 state records:
+- California: $149.99 / $199.99
+- Texas: $99.99 / $149.99
+- New York: $199.99 / $249.99
+... (creating 15 rows for same service)
+
+Service "EIN Filing" also had 15 state records:
+- California: $199.99 / $249.99
+- Texas: $149.99 / $199.99
+... (duplication!)
+```
+
+**After (New Schema - Locations Stored Once):**
+```
+Locations table (created once):
+- California
+- Texas
+- New York
+
+Service "DBA Filing":
+- California: $149.99 / $199.99
+- Texas: $99.99 / $149.99
+- New York: $199.99 / $249.99
+
+Service "EIN Filing" (reuses same locations):
+- California: $199.99 / $249.99
+- Texas: $149.99 / $199.99
+
+✅ No duplication, clean separation
+```
+
+---
+
+## Class Structure (11 Classes)
 
 ### Plugin.php
-Main plugin initialization class
-- `activate()` - Creates database tables on activation
-- `deactivate()` - Cleans up on deactivation
-- `init()` - Initializes plugin components
+Main plugin initialization
+- `activate()` - Creates 7 database tables
+- `deactivate()` - Cleanup on deactivation
+- `init()` - Initializes components
 - `enqueue_frontend_assets()` - Loads CSS/JS
-- `render_form_shortcode()` - Renders form shortcode
+- `render_form_shortcode()` - Renders form
 
 ### Database.php
-Database management
-- `create_tables()` - Creates all plugin tables
-- `drop_tables()` - Removes plugin tables on uninstall
+Database schema definition (7 tables)
+- `create_tables()` - Creates all tables with foreign keys
+- `drop_tables()` - Removes all tables on uninstall
 - `get_table()` - Returns prefixed table name
 
 ### Service.php
@@ -154,51 +243,79 @@ Service model
 - `load($id)` - Load single service
 - `get_by_identifier()` - Load by type/category/name
 - `get_all()` - Get all services
-- `save()` - Create or update service
-- `delete()` - Remove service
-- `get_full_data()` - Service with all related items
+- `save($args)` - Create/update service
+- `delete($id)` - Remove service
 
-### Package.php
-Package model (Standard/Premium)
-- `load($id)`, `save()`, `delete()`
-- `get_by_service()` - Get packages for a service
+### Location.php (NEW)
+Location model (countries, states, regions)
+- `load($id)` - Load single location
+- `get_all()` - Get all locations
+- `save($args)` - Create/update location
+- `delete($id)` - Remove location
+- `get_by_name($name)` - Get location by name
 
-### State.php
-State model (for state-based pricing)
-- `load($id)`, `save()`, `delete()`
-- `get_by_service()` - Get states for a service
+### ServiceLocationPricing.php (NEW - Junction)
+Links services to locations with independent pricing
+- `load($id)` - Load single pricing record
+- `get_by_service_and_location($service_id, $location_id)` - Get specific link
+- `get_by_service($service_id)` - Get all locations for service
+- `get_all()` - Get all links
+- `save($args)` - Create/update link with `is_universal` toggle
+  - `is_universal` flag: 1=single price, 0=tiered pricing
+  - `standard_price` used for both universal and base
+  - `premium_price` NULL if universal
+- `delete($id)` - Remove link
 
-### Portal.php
-Portal model (for portal-based pricing)
-- `load($id)`, `save()`, `delete()`
-- `get_by_service()` - Get portals for a service
+### PackageType.php (NEW)
+Package type model (Standard, Premium, Enterprise, etc.)
+- `load($id)`
+- `get_all()`
+- `save($args)`
+- `delete($id)`
+- `get_by_name($name)`
 
-### Submission.php
-Submission model
-- `load($id)`, `save()`, `delete()`
-- `get_by_service()`, `get_by_email()`, `get_by_status()`
-- `update_status()` - Change submission status
-- `get_total_revenue()` - Total sales
-- `get_service_revenue()` - Revenue per service
+### ServicePackagePricing.php (NEW - Junction)
+Links services to package types with independent pricing
+- `load($id)`
+- `get_by_service_and_package($service_id, $package_type_id)`
+- `get_by_service($service_id)` - Get all package options for service
+- `save($args)` - Create/update link with price
+- `delete($id)`
 
 ### Form.php
-Frontend form rendering
-- `render()` - Main form HTML
-- `get_pricing_options()` - Returns pricing step HTML
-- Pricing renderers: `render_state_based_pricing()`, `render_portal_based_pricing()`, etc.
+Frontend form rendering (4-step form with 9 fields)
+- `render()` - Main form boilerplate
+- `render_step_1_service_selection()` - Service selection
+- `render_step_2_pricing()` - Location selection + pricing
+- `render_step_3_contact()` - 9 contact information fields
+- `render_step_4_review()` - Review and submit
+- `render_state_based_pricing()` - Location dropdown + package selection
+- `render_portal_based_pricing()` - Portal checkboxes
+- Helper methods for pricing rendering
 
-### Admin.php
-Admin pages and management
-- `register_menu()` - Sets up admin menu
-- `page_services()`, `page_packages()`, `page_states()`, `page_portals()`, `page_submissions()`
-- Form handling: `save_service()`, `delete_service()`, etc.
+### Admin.php (Largest - 7 Menus)
+Admin pages and management (1700+ lines)
+- `register_menus()` - Sets up 7 admin menus
+- **Services**: `page_services()`, `save_service()`, `delete_service()`
+- **Locations**: `page_locations()`, `save_location()`, `delete_location()`
+- **Service Location Pricing**: `page_service_location_pricing()`, `save_service_location_pricing()`, `delete_service_location_pricing()`
+  - Form includes universal price checkbox with JavaScript toggle
+  - Lists show "Universal" or "Tiered" badge
+- **Package Types**: `page_package_types()`, `save_package_type()`, `delete_package_type()`
+- **Service Package Pricing**: `page_service_package_pricing()`, `save_service_package_pricing()`, `delete_service_package_pricing()`
+- **Submissions**: `page_submissions()` - View all 9-field submissions
+- **Settings**: `page_settings()` - Plugin configuration
 
 ### Ajax.php
 AJAX endpoint handlers
-- `get_pricing_options()` - Returns pricing HTML
-- `calculate_price()` - Calculates total price
-- `get_review_summary()` - Returns review step HTML
-- `submit_form()` - Processes form submission
+- `get_pricing_options()` - Returns pricing UI HTML
+- `calculate_price()` - Calculates price (updated for location_id)
+- `get_review_summary()` - Returns review HTML
+- `submit_form()` - Processes submission
+  - Validates all 9 required fields
+  - Stores all 11 fields (9 required + 2 optional)
+  - Calculates total price
+  - Fires custom hook: `dsf_form_submitted`
 
 ---
 
@@ -211,37 +328,52 @@ User selects service radio button
 → "Next" button validates selection
 ```
 
-### Step 2: Pricing Options
+### Step 2: Location & Pricing Selection
 ```javascript
 AJAX calls dsf_get_pricing_options
-→ Renders appropriate pricing UI based on pricing_model
-→ User makes selections
-→ Real-time AJAX calculates price on change
+→ Renders location dropdown (location_id, not state)
+→ Checks is_universal flag:
+  - If universal: Shows single price field
+  - If tiered: Shows Standard/Premium price fields
+→ Optional package selection (if service has packages)
+→ Real-time AJAX price calculation on change
 → Price displays at bottom
 → "Next" button validates selections
 ```
 
-### Step 3: Contact Information
+### Step 3: Contact Information (9 Required + 2 Optional)
 ```javascript
-User fills required fields:
-- Business Name (required)
-- Email (required)
-- Phone (required)
-- Entity Type (optional)
-- Notes (optional)
+User fills form fields:
 
-Form has client-side validation
+REQUIRED (9 fields):
+- First Name
+- Last Name
+- Business Name
+- Business Address
+- City
+- State/Province
+- Zipcode
+- Email
+- Phone
+
+OPTIONAL (2 fields):
+- Entity Type (dropdown)
+- Additional Notes (textarea)
+
+Client-side and server-side validation:
 - Email format check
 - Required field check
+- Phone format (basic)
 ```
 
 ### Step 4: Review & Submit
 ```javascript
 AJAX calls dsf_get_review_summary
-→ Displays service and pricing summary
+→ Displays service and location selected
+→ Shows package selected (if applicable)
 → Shows contact info for review
 → Displays final total price
-→ Submit button sends all form data
+→ Submit button sends all 11 fields + pricing
 → On success: Form hidden, success message shown
 ```
 
@@ -520,50 +652,54 @@ Hook into `dsf_form_submitted` to:
 ```
 /wp-content/plugins/dynamic-services-form/
 
-Main Files:
-├── dynamic-services-form.php     # Entry point, 200 lines
+Main Entry:
+├── dynamic-services-form.php     # Plugin initialization, 200 lines
 ├── uninstall.php                 # Cleanup on uninstall
 
-Core Classes (includes/):
-├── Plugin.php                    # Plugin initialization
-├── Database.php                  # DB schema and management
+Core Classes (includes/) - 11 Classes:
+├── Plugin.php                    # Main plugin class
+├── Database.php                  # 7-table schema definition
 ├── Service.php                   # Service model
-├── Package.php                   # Package model
-├── State.php                     # State model
-├── Portal.php                    # Portal model
-├── Submission.php                # Submission model
-├── Form.php                      # Frontend form rendering
-├── Admin.php                     # Admin pages (1000+ lines)
+├── Location.php                  # Location model (NEW)
+├── ServiceLocationPricing.php    # Service-Location junction (NEW)
+├── PackageType.php               # Package type model (NEW)
+├── ServicePackagePricing.php     # Service-Package junction (NEW)
+├── Form.php                      # Frontend form (4-step, 9 fields)
+├── Admin.php                     # Admin interface (7 menus, 1700+ lines)
 ├── Ajax.php                      # AJAX handlers
-└── sample-data.php               # Optional sample data
+└── sample-data.php               # Optional test data
 
 Frontend Assets (assets/):
 ├── js/
-│   ├── form.js                   # Form logic (400 lines)
-│   └── admin.js                  # Admin logic
+│   ├── form.js                   # Multi-step form logic (500 lines)
+│   └── admin.js                  # Admin enhancements
 ├── css/
-│   ├── form.css                  # Frontend styles
+│   ├── form.css                  # Frontend styles (600 lines)
 │   └── admin.css                 # Admin styles
 
 Documentation:
 ├── README.md                     # Full documentation
-├── QUICKSTART.md                 # Quick setup guide
-└── ARCHITECTURE.md (this file)   # Architecture details
+├── QUICKSTART.md                 # Quick start guide
+├── ARCHITECTURE.md (this file)   # Architecture details
+├── CUSTOMIZATION.md              # Advanced customization
+└── aboutplugin.md                # Feature overview
 ```
 
 ---
 
 ## Statistics
 
-- **Total Classes**: 9 (Plugin, Database, Service, Package, State, Portal, Submission, Form, Admin, Ajax)
-- **Database Tables**: 5
-- **Admin Pages**: 5 (Services, Packages, States, Portals, Submissions)
-- **AJAX Endpoints**: 4
+- **Total Classes**: 11 (Plugin, Database, Service, Location, ServiceLocationPricing, PackageType, ServicePackagePricing, Form, Admin, Ajax + sample-data)
+- **Database Tables**: 7 (normalized schema)
+- **Admin Pages**: 7 (Services, Locations, Service Location Pricing, Package Types, Service Package Pricing, Submissions, Settings)
+- **AJAX Endpoints**: 4 (get_pricing_options, calculate_price, get_review_summary, submit_form)
 - **Form Steps**: 4
-- **Pricing Models**: 4 (extensible to more)
-- **Lines of Code**: ~3,500+ (production-ready)
+- **Contact Form Fields**: 9 required + 2 optional
+- **Pricing Models**: 4 (extensible)
+- **Lines of Code**: ~4,500+ (production-ready)
 - **CSS Lines**: ~600+
-- **JavaScript Lines**: ~400+
+- **JavaScript Lines**: ~500+
+- **Database Design**: Fully normalized with junction tables
 
 ---
 

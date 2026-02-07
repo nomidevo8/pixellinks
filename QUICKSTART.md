@@ -20,123 +20,176 @@ After activation, you should see **Dynamic Services** in the left admin menu.
 
 ---
 
-## First-Time Setup
+## First-Time Setup (New Normalized Structure)
 
 ### Step 1: Create a Service
 
-1. Go to **Dynamic Services** → **Services**
-2. Click **Add New**
-3. Fill in the form:
-   - **Service Type**: `USA` (business registration location)
-   - **Category**: `Core Company` (business type)
-   - **Name**: `DBA Fictitious Name` (specific service)
-   - **Pricing Model**: Select `state_based` (users select a state + optional package)
-   - **Has Packages**: ✓ Check this to enable Standard/Premium options
-   - **Description**: Optional description
-   - **Enabled**: ✓ Check to activate
+1. Go to **Dynamic Services Form** → **Services**
+2. Click **Add New Service**
+3. Fill in:
+   - **Service Type**: `USA`
+   - **Category**: `Core Company`
+   - **Name**: `DBA Fictitious Name`
+   - **Pricing Model**: `state_based`
+   - **Description**: Optional
+   - **Enabled**: ✓ Check
 4. Click **Save Service**
 
-### Step 2: Create Packages (optional, only if "Has Packages" is enabled)
+### Step 2: Create Locations (NEW - Replaces Old States)
 
-1. Go to **Dynamic Services** → **Packages**
-2. Click **Add New**
+1. Go to **Dynamic Services Form** → **Locations**
+2. Click **Add New Location**
 3. Fill in:
-   - **Service**: Select the service you just created
-   - **Package Type**: `Standard` or `Premium`
-   - **Price**: `99.99` (or leave empty for free)
-   - **Description**: `Includes basic filing` (optional)
-   - **Enabled**: ✓ Check
-4. Click **Save Package**
-5. Repeat to create another package with different price
+   - **Location Name**: `California` (or any geographic region)
+   - Click **Save Location**
+4. Repeat for other locations (Texas, New York, etc.)
 
-### Step 3: Create States (for state-based pricing)
+**Why separate Locations table?**
+- Locations stored once, reused across multiple services
+- Reduces data duplication
+- Easy to update location info in one place
 
-1. Go to **Dynamic Services** → **States**
-2. Click **Add New**
+### Step 3: Create Service Location Pricing (NEW)
+
+1. Go to **Dynamic Services Form** → **Service Location Pricing**
+2. Click **Add New Price Link**
 3. Fill in:
-   - **Service**: Select your service
-   - **State Name**: `California`
-   - **Standard Price**: `149.99` (applies if no premium package selected)
-   - **Premium Price**: `199.99` (applies if premium package selected)
-   - **Enabled**: ✓ Check
-4. Click **Save State**
-5. Repeat for other states
+   - **Service**: Select "DBA Fictitious Name"
+   - **Location**: Select "California"
+   - **Use Universal Price?**: ✓ Check for single price
+     - Shows single "Universal Price" field
+   - OR uncheck for tiered pricing:
+     - Shows "Standard Price" and "Premium Price" fields
+4. Click **Save Pricing**
+5. Repeat for other location + service combinations
 
-### Step 4: Add Form to Page
+**Why this structure?**
+- Same location can have different prices for different services
+- Single price (universal) or tiered pricing (Standard/Premium) toggle
+- Cleaner separation of concerns
+
+### Step 4: Create Package Types (NEW)
+
+1. Go to **Dynamic Services Form** → **Package Types**
+2. Click **Add New Package Type**
+3. Fill in:
+   - **Package Name**: `Standard`
+   - **Description**: Optional
+   - Click **Save**
+4. Create more: `Premium`, `Enterprise`, etc.
+
+**Why separate Package Types?**
+- Package types stored once
+- Same package type can be used by multiple services
+- Each service links with independent pricing
+
+### Step 5: Create Service Package Pricing (NEW)
+
+1. Go to **Dynamic Services Form** → **Service Package Pricing**
+2. Click **Add New Package Pricing**
+3. Fill in:
+   - **Service**: Select "DBA Fictitious Name"
+   - **Package Type**: Select "Standard"
+   - **Price**: `99.99`
+   - Click **Save**
+4. Repeat for Premium package: `149.99`
+5. Create more service-package combinations as needed
+
+### Step 6: Add Form to Page
 
 1. Create or edit a WordPress page
-2. Add the shortcode:
+2. Add shortcode:
    ```
-   [dynamic_service_form]
+   [dynamic_services_form]
    ```
-3. Publish the page
+3. Publish
+
+Form now has 9 required contact fields:
+- First Name
+- Last Name
+- Business Name
+- Business Address
+- City
+- State/Province
+- Zipcode
+- Email
+- Phone
+
+(Plus 2 optional: Entity Type, Additional Notes)
 
 ---
 
 ## Example Configurations
 
-### Example 1: State-Based Pricing with Packages
+### Example 1: Service with Universal Price (Single Price)
 
-**Service**: DBA Fictitious Name (state_based + has_packages)
+**Service**: Simple Business Filing (state_based, no packages)
 
-**Packages**:
-- Standard: $99.99
-- Premium: $149.99
+**Locations**:
+- California
+- Texas
+- New York
 
-**States**:
-- California:  Standard: $149.99 | Premium: $199.99
-- Texas:       Standard: $99.99  | Premium: $149.99
-- New York:    Standard: $199.99 | Premium: $249.99
+**Service Location Pricing** (toggle ON: "Use Universal Price?"):
+- California: $149.99 (universal)
+- Texas: $99.99 (universal)
+- New York: $199.99 (universal)
 
 **Form Flow**:
-1. Service already selected (via URL or Step 1)
-2. User selects state → selects package → price calculates
-3. Enter contact info
+1. Service name shown
+2. User selects location → price updates to single price
+3. Enter 9 contact fields
 4. Review and submit
 
 ---
 
-### Example 2: Portal-Based Pricing (No Packages)
+### Example 2: Service with Tiered Pricing (Standard/Premium)
 
-**Service**: Multi-Portal Filing (portal_based, no packages)
+**Service**: Premium Business Filing (state_based, has packages)
 
-**Portals**:
-- Secretary of State: $50.00
-- IRS Portal: $75.00
-- Local County: $25.00
+**Locations**:
+- California
+- Texas
 
-**Form Flow**:
-1. Service selected
-2. User checks multiple portals → price updates (sum of selected)
-3. Enter contact info
-4. Review and submit
+**Package Types**:
+- Standard
+- Premium
 
----
+**Service Location Pricing** (toggle OFF: "Use Universal Price?"):
+- California: Standard $149.99 | Premium $199.99
+- Texas: Standard $99.99 | Premium $149.99
 
-### Example 3: Fixed Price
-
-**Service**: Business License (fixed_price)
-
-**Configuration**: Set pricing model to "fixed_price"
+**Service Package Pricing**:
+- Standard: $99.99 (base)
+- Premium: $149.99 (base)
 
 **Form Flow**:
-1. Service selected
-2. Price is fixed (no selections needed)
-3. Enter contact info
-4. Review and submit
-
----
-
-### Example 4: Calculator-Based
-
-**Service**: Premium Package (calculator)
-
-**Form Flow**:
-1. Service selected
-2. User enters amount
-3. Price calculates (e.g., amount × rate)
-4. Enter contact info
+1. Service name shown
+2. User selects location
+3. User selects package (Standard/Premium) → price updates
+4. Enter 9 contact fields
 5. Review and submit
+
+---
+
+### Example 3: Multiple Services Using Same Locations
+
+**Locations** (created once, reused):
+- California
+- Texas
+
+**Service 1**: DBA Filing
+- California: $149.99 (universal)
+- Texas: $99.99 (universal)
+
+**Service 2**: EIN Application
+- California: $199.99 (standard) / $249.99 (premium)
+- Texas: $149.99 (standard) / $199.99 (premium)
+
+**Benefit**:
+- Location data maintained in one place
+- Each service has independent pricing
+- Updates to location name/info apply everywhere
 
 ---
 
@@ -159,27 +212,30 @@ If query parameters are present, Step 1 is skipped automatically.
 
 ## Admin Features
 
+## Admin Features
+
 ### View Submissions
 
-1. Go to **Dynamic Services** → **Submissions**
+1. Go to **Dynamic Services Form** → **Submissions**
 2. See all form submissions with:
-   - Submission date
-   - Business name
-   - Email
-   - Service selected
+   - Submission date/time
+   - All 9 contact fields (first/last name, address, email, phone, etc.)
+   - Service and location selected
+   - Package selected (if applicable)
    - Total price
-   - Status (pending, etc.)
+   - Status
 
 ### Edit/Delete Items
 
-**Services**:
-- Click **Edit** to modify
-- Click **Delete** to remove (also removes related packages/states/portals)
+**Services**: Click Edit to modify, Click Delete to remove
 
-**Packages/States/Portals**:
-- Click **Edit** to modify pricing
-- Click **Delete** to remove
-- Changes update immediately on frontend
+**Locations**: Click Edit to modify, Click Delete to remove
+
+**Service Location Pricing**: Click Edit pricing or Delete link
+
+**Package Types & Service Package Pricing**: Update pricing independently
+
+Changes update immediately on frontend form.
 
 ---
 
@@ -189,25 +245,38 @@ If query parameters are present, Step 1 is skipped automatically.
 Shows all services organized by Type → Category → Name
 (Skipped if URL parameters provided)
 
-### Step 2: Pricing & Options
-Varies by pricing model:
-- **State-based**: Dropdown for states + optional package radio buttons
+### Step 2: Location & Pricing Selection
+Based on pricing model:
+- **State-based**: Dropdown for location + optional package radio buttons
 - **Portal-based**: Checkboxes for multiple portals
 - **Fixed Price**: Display only (no selections)
 - **Calculator**: Input field for amount
 
 Real-time price calculation shown at bottom.
 
-### Step 3: Contact Information
-- Business Name (required)
-- Email (required)
-- Phone (required)
-- Entity Type (optional)
-- Additional Notes (optional)
+**Universal Price Toggle**:
+- Single location selection shows single price (if universal=1)
+- OR shows Standard/Premium pricing (if universal=0)
+
+### Step 3: Contact Information (9 fields)
+**Required**:
+- First Name
+- Last Name
+- Business Name
+- Business Address
+- City
+- State/Province
+- Zipcode
+- Email
+- Phone
+
+**Optional**:
+- Entity Type (dropdown)
+- Additional Notes (textarea)
 
 ### Step 4: Review & Submit
 - Summary of service and pricing
-- Contact info review
+- Review of all 9+ contact fields
 - Total price display
 - Submit button
 
@@ -261,27 +330,31 @@ For extending functionality:
 
 ```
 dynamic-services-form/
-├── dynamic-services-form.php   ← Main plugin file (don't edit)
+├── dynamic-services-form.php      ← Main plugin file
 ├── includes/
-│   ├── Plugin.php             ← Core initialization
-│   ├── Admin.php              ← Admin pages
-│   ├── Form.php               ← Frontend form
-│   ├── Ajax.php               ← Form handling
-│   ├── Database.php           ← Database setup
-│   ├── Service.php            ← Service model
-│   ├── Package.php            ← Package model
-│   ├── State.php              ← State model
-│   ├── Portal.php             ← Portal model
-│   └── Submission.php         ← Submission model
+│   ├── Plugin.php                 ← Core initialization
+│   ├── Database.php               ← 7-table schema
+│   ├── Service.php                ← Service model
+│   ├── Location.php               ← Location model (NEW)
+│   ├── ServiceLocationPricing.php ← Service-Location junction (NEW)
+│   ├── PackageType.php            ← Package type model (NEW)
+│   ├── ServicePackagePricing.php  ← Service-Package junction (NEW)
+│   ├── Form.php                   ← Frontend form (9 fields)
+│   ├── Admin.php                  ← Admin (7 menus)
+│   ├── Ajax.php                   ← AJAX handlers
+│   └── sample-data.php            ← Optional test data
 ├── assets/
 │   ├── js/
-│   │   ├── form.js            ← Frontend form logic
-│   │   └── admin.js           ← Admin logic
+│   │   ├── form.js            ← Form logic
+│   │   └── admin.js           ← Admin enhancements
 │   └── css/
-│       ├── form.css           ← Frontend styles (customize here)
+│       ├── form.css           ← Frontend styles
 │       └── admin.css          ← Admin styles
 ├── README.md
-└── QUICKSTART.md (this file)
+├── QUICKSTART.md
+├── ARCHITECTURE.md
+├── CUSTOMIZATION.md
+└── aboutplugin.md
 ```
 
 ---

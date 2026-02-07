@@ -10,8 +10,14 @@ Add to your theme's `functions.php` or create a custom plugin:
 <?php
 // Send email when form is submitted
 add_action('dsf_form_submitted', function($submission_id, $service, $form_data, $total_price) {
-    // Get form data
+    // Get form data (9 required + 2 optional fields)
+    $first_name = $form_data['first_name'] ?? '';
+    $last_name = $form_data['last_name'] ?? '';
     $business_name = $form_data['business_name'] ?? '';
+    $business_address = $form_data['business_address'] ?? '';
+    $city = $form_data['city'] ?? '';
+    $state = $form_data['state'] ?? '';
+    $zipcode = $form_data['zipcode'] ?? '';
     $email = $form_data['email'] ?? '';
     $phone = $form_data['phone'] ?? '';
     
@@ -19,12 +25,20 @@ add_action('dsf_form_submitted', function($submission_id, $service, $form_data, 
     $subject = 'Service Request: ' . $service->get('name');
     $message = sprintf(
         "New service request submitted:\n\n" .
-        "Business Name: %s\n" .
+        "Name: %s %s\n" .
+        "Business: %s\n" .
+        "Address: %s, %s %s %s\n" .
         "Email: %s\n" .
         "Phone: %s\n" .
         "Service: %s\n" .
-        "Total Price: $%.2f\n",
+        "Total Price: \$%.2f\n",
+        $first_name,
+        $last_name,
         $business_name,
+        $business_address,
+        $city,
+        $state,
+        $zipcode,
         $email,
         $phone,
         $service->get('name'),
@@ -75,9 +89,20 @@ add_action('dsf_form_submitted', function($submission_id, $service, $form_data, 
         'post_title' => $form_data['business_name'] ?? 'Submission #' . $submission_id,
         'post_type' => 'service_request', // Create custom post type
         'post_status' => 'pending',
-        'post_content' => 'Service: ' . $service->get('name') . "\n" .
-                         'Price: $' . $total_price . "\n" .
-                         'Contact: ' . $form_data['email'] ?? '',
+        'post_content' => sprintf(
+            "Service: %s\nLocation: %s\nPrice: \$%.2f\n\nContact:\nName: %s %s\nEmail: %s\nPhone: %s\nAddress: %s, %s %s %s",
+            $service->get('name'),
+            $form_data['location'] ?? '',
+            $total_price,
+            $form_data['first_name'] ?? '',
+            $form_data['last_name'] ?? '',
+            $form_data['email'] ?? '',
+            $form_data['phone'] ?? '',
+            $form_data['business_address'] ?? '',
+            $form_data['city'] ?? '',
+            $form_data['state'] ?? '',
+            $form_data['zipcode'] ?? ''
+        ),
     ]);
     
     // Add post meta
@@ -93,12 +118,12 @@ add_action('dsf_form_submitted', function($submission_id, $service, $form_data, 
 
 ```php
 <?php
-// Sync submission to ActiveCampaign
+// Sync submission to ActiveCampaign with new 9-field form
 add_action('dsf_form_submitted', function($submission_id, $service, $form_data, $total_price) {
     $ac_api = 'https://YOUR_ACCOUNT.activehosted.com/api/3';
     $ac_key = 'YOUR_API_KEY'; // Store in wp-config.php
     
-    // Create contact
+    // Create contact with all new fields
     $response = wp_remote_post($ac_api . '/contacts', [
         'headers' => [
             'Api-Token' => $ac_key,
@@ -106,11 +131,18 @@ add_action('dsf_form_submitted', function($submission_id, $service, $form_data, 
         ],
         'body' => wp_json_encode([
             'contact' => [
+                'firstName' => $form_data['first_name'] ?? '',
+                'lastName' => $form_data['last_name'] ?? '',
                 'email' => $form_data['email'] ?? '',
-                'firstName' => current(explode(' ', $form_data['business_name'] ?? '')),
                 'phone' => $form_data['phone'] ?? '',
                 'fieldValues' => [
-                    ['field' => 'custom_field_id', 'value' => $service->get('name')],
+                    ['field' => 1, 'value' => $form_data['business_name'] ?? ''],
+                    ['field' => 2, 'value' => $form_data['business_address'] ?? ''],
+                    ['field' => 3, 'value' => $form_data['city'] ?? ''],
+                    ['field' => 4, 'value' => $form_data['state'] ?? ''],
+                    ['field' => 5, 'value' => $form_data['zipcode'] ?? ''],
+                    ['field' => 6, 'value' => $service->get('name')],
+                    ['field' => 7, 'value' => (string) $total_price],
                 ],
             ],
         ]),
@@ -177,69 +209,120 @@ add_filter('dsf_calculate_total_price', function($price, $service_id, $form_data
 }, 10, 3);
 ```
 
-### 7. Programmatically Create Service
+### 7. Programmatically Create Service with Locations
 
 ```php
 <?php
-// Create service programmatically
+// Create service with locations (NEW normalized structure)
 $service_id = \DSF\Service::save([
     'type' => 'USA',
     'category' => 'Core Company',
     'name' => 'LLC Formation',
     'pricing_model' => 'state_based',
-    'has_packages' => 1,
     'description' => 'Form LLC in any US state',
     'enabled' => 1,
 ]);
 
-// Create packages
-\DSF\Package::save([
+// Create or get locations
+$ca_location_id = \DSF\Location::save(['name' => 'California']);
+$tx_location_id = \DSF\Location::save(['name' => 'Texas']);
+
+// Link service to locations with pricing (is_universal = 1 for single price)
+\DSF\ServiceLocationPricing::save([
     'service_id' => $service_id,
-    'package_type' => 'Standard',
-    'price' => 99.99,
-    'description' => 'Basic formation',
+    'location_id' => $ca_location_id,
+    'standard_price' => 149.99,
+    'premium_price' => null,
+    'is_universal' => 1, // Single price, not tiered
     'enabled' => 1,
 ]);
 
-// Create states
-\DSF\State::save([
+\DSF\ServiceLocationPricing::save([
     'service_id' => $service_id,
-    'state_name' => 'Delaware',
+    'location_id' => $tx_location_id,
+    'standard_price' => 99.99,
+    'premium_price' => null,
+    'is_universal' => 1,
+    'enabled' => 1,
+]);
+
+// OR with tiered pricing (is_universal = 0)
+\DSF\ServiceLocationPricing::save([
+    'service_id' => $service_id,
+    'location_id' => $ca_location_id,
     'standard_price' => 149.99,
     'premium_price' => 199.99,
+    'is_universal' => 0, // Tiered: Standard/Premium
+    'enabled' => 1,
+]);
+
+// Create package types (stored once, shared)
+$standard_package_id = \DSF\PackageType::save(['name' => 'Standard']);
+$premium_package_id = \DSF\PackageType::save(['name' => 'Premium']);
+
+// Link service to package types
+\DSF\ServicePackagePricing::save([
+    'service_id' => $service_id,
+    'package_type_id' => $standard_package_id,
+    'price' => 99.99,
+    'enabled' => 1,
+]);
+
+\DSF\ServicePackagePricing::save([
+    'service_id' => $service_id,
+    'package_type_id' => $premium_package_id,
+    'price' => 149.99,
     'enabled' => 1,
 ]);
 ?>
 ```
+
+**Key Features:**
+- `is_universal` flag toggles single price (1) vs tiered pricing (0)
+- Locations stored once in `wp_dsf_locations`, reused across services
+- Same location can have different prices for different services
+- Package types stored once, reused across services
 
 ### 8. Query Submissions Programmatically
 
 ```php
 <?php
 // Get all submissions
-$submissions = \DSF\Submission::get_all();
+$submissions = $wpdb->get_results(
+    "SELECT * FROM {$wpdb->prefix}dsf_submissions ORDER BY created_at DESC"
+);
 
-// Get by service
-$service_submissions = \DSF\Submission::get_by_service(1);
+// Get submissions for specific service
+$service_submissions = $wpdb->get_results(
+    $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE service_id = %d",
+        $service_id
+    )
+);
+
+// Get by location
+$location_submissions = $wpdb->get_results(
+    $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE location_id = %d",
+        $location_id
+    )
+);
 
 // Get by email
-$user_submissions = \DSF\Submission::get_by_email('user@example.com');
+$user_submissions = $wpdb->get_results(
+    $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE email = %s",
+        $email
+    )
+);
 
-// Get by status
-$pending = \DSF\Submission::get_by_status('pending');
-
-// Count submissions
-$total = \DSF\Submission::count_all();
-$pending_count = \DSF\Submission::count_by_status('pending');
-
-// Get revenue
-$total_revenue = \DSF\Submission::get_total_revenue(); // All services
-$service_revenue = \DSF\Submission::get_service_revenue(1); // Specific service
-
-// Load single submission
-$submission = new \DSF\Submission(42);
-$form_data = $submission->get_form_data();
-$service = $submission->get_service();
+// Get recent submissions with all 9 contact fields
+foreach ($submissions as $submission) {
+    echo $submission->first_name . ' ' . $submission->last_name . '\n';
+    echo $submission->business_address . ', ' . $submission->city . ', ' . $submission->state . ' ' . $submission->zipcode . '\n';
+    echo $submission->email . ' | ' . $submission->phone . '\n';
+    echo 'Total: $' . $submission->total_price . '\n\n';
+}
 ?>
 ```
 
