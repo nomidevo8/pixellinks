@@ -1,0 +1,431 @@
+/**
+ * Dynamic Services Form - Frontend Styles
+ */
+
+.dsf-form-wrapper {
+    max-width: 800px;
+    margin: 30px auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.dsf-form {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Steps */
+.dsf-step {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.dsf-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dsf-step h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+/* Service Selection */
+.dsf-service-selection {
+    margin-bottom: 30px;
+}
+
+.dsf-service-type {
+    margin-bottom: 25px;
+}
+
+.dsf-service-type h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #444;
+}
+
+.dsf-service-category {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.dsf-service-category h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dsf-service-category ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dsf-service-category li {
+    margin-bottom: 8px;
+}
+
+.dsf-service-category label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.dsf-service-category label:hover {
+    background-color: #f5f5f5;
+}
+
+.dsf-service-category input[type="radio"] {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+/* Form Fields */
+.dsf-field-group {
+    margin-bottom: 20px;
+}
+
+.dsf-field-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.dsf-field-group input[type="text"],
+.dsf-field-group input[type="email"],
+.dsf-field-group input[type="tel"],
+.dsf-field-group input[type="number"],
+.dsf-field-group select,
+.dsf-field-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.dsf-field-group input[type="text"]:focus,
+.dsf-field-group input[type="email"]:focus,
+.dsf-field-group input[type="tel"]:focus,
+.dsf-field-group input[type="number"]:focus,
+.dsf-field-group select:focus,
+.dsf-field-group textarea:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.required {
+    color: #d32f2f;
+}
+
+/* Pricing Options */
+.dsf-pricing-options-container {
+    margin-bottom: 20px;
+}
+
+/* Packages */
+.dsf-packages {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.dsf-package-option {
+    position: relative;
+}
+
+.dsf-package-option label {
+    display: block;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dsf-package-option input[type="radio"] {
+    margin-bottom: 10px;
+}
+
+.dsf-package-option label:hover {
+    border-color: #4CAF50;
+    background-color: #fafafa;
+}
+
+.dsf-package-option input[type="radio"]:checked + label {
+    border-color: #4CAF50;
+    background-color: #f1f8f6;
+}
+
+.dsf-package-option strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.dsf-package-option p {
+    margin: 5px 0;
+    font-size: 12px;
+    color: #666;
+}
+
+.dsf-package-option .price {
+    display: block;
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+/* Portals */
+.dsf-portals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.dsf-portal-option {
+    position: relative;
+}
+
+.dsf-portal-option label {
+    display: block;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dsf-portal-option input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.dsf-portal-option label:hover {
+    border-color: #4CAF50;
+    background-color: #fafafa;
+}
+
+.dsf-portal-option input[type="checkbox"]:checked + label {
+    border-color: #4CAF50;
+    background-color: #f1f8f6;
+}
+
+.dsf-portal-option strong {
+    margin: 0;
+    color: #333;
+}
+
+.dsf-portal-option .price {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4CAF50;
+}
+
+/* Buttons */
+.dsf-button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    justify-content: flex-end;
+}
+
+.dsf-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dsf-btn-next,
+.dsf-btn-submit {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.dsf-btn-next:hover,
+.dsf-btn-submit:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.dsf-btn-next:active,
+.dsf-btn-submit:active {
+    transform: translateY(0);
+}
+
+.dsf-btn-prev {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.dsf-btn-prev:hover {
+    background-color: #e0e0e0;
+}
+
+/* Price Display */
+.dsf-price-total {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border-left: 4px solid #4CAF50;
+}
+
+.dsf-price-total strong {
+    color: #333;
+    font-size: 16px;
+}
+
+#dsf-total-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+/* Review Summary */
+.dsf-review-item {
+    padding: 20px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    border-left: 4px solid #4CAF50;
+}
+
+.dsf-review-item h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.dsf-review-item p {
+    margin: 8px 0;
+    line-height: 1.6;
+    color: #666;
+}
+
+.dsf-review-item strong {
+    color: #333;
+}
+
+/* Success Message */
+.dsf-success-message {
+    text-align: center;
+    padding: 40px 20px;
+    background-color: #f1f8f6;
+    border-radius: 8px;
+}
+
+.dsf-success-message h2 {
+    color: #4CAF50;
+    margin-top: 0;
+}
+
+.dsf-success-message p {
+    color: #666;
+    font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dsf-form {
+        padding: 20px;
+    }
+
+    .dsf-step h2 {
+        font-size: 20px;
+    }
+
+    .dsf-packages,
+    .dsf-portals {
+        grid-template-columns: 1fr;
+    }
+
+    .dsf-button-group {
+        flex-direction: column;
+    }
+
+    .dsf-btn {
+        width: 100%;
+    }
+
+    .dsf-service-type h3 {
+        font-size: 16px;
+    }
+
+    .dsf-field-group label {
+        font-size: 13px;
+    }
+
+    .dsf-field-group input,
+    .dsf-field-group select,
+    .dsf-field-group textarea {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+@media (max-width: 480px) {
+    .dsf-form-wrapper {
+        margin: 15px;
+    }
+
+    .dsf-form {
+        padding: 15px;
+    }
+
+    .dsf-step h2 {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    .dsf-price-total {
+        padding: 15px;
+    }
+
+    #dsf-total-price {
+        font-size: 20px;
+    }
+}
