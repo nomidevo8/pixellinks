@@ -176,6 +176,7 @@ class ServiceLocationPricing {
             'location_id' => 0,
             'standard_price' => null,
             'premium_price' => null,
+            'is_universal' => 0,
             'enabled' => 1,
         ];
         
@@ -186,10 +187,11 @@ class ServiceLocationPricing {
             'location_id' => intval($args['location_id']),
             'standard_price' => $args['standard_price'] !== null ? floatval($args['standard_price']) : null,
             'premium_price' => $args['premium_price'] !== null ? floatval($args['premium_price']) : null,
+            'is_universal' => intval($args['is_universal']),
             'enabled' => intval($args['enabled']),
         ];
         
-        $format = ['%d', '%d', '%f', '%f', '%d'];
+        $format = ['%d', '%d', '%f', '%f', '%d', '%d'];
         
         if ($args['id']) {
             $wpdb->update($table, $data, ['id' => $args['id']], $format, ['%d']);
