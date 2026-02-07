@@ -1,5 +1,6 @@
 /**
  * Dynamic Services Form - Frontend JavaScript
+ * 2-Step Workflow: Service + Pricing -> Contact Info
  */
 
 (function($) {
@@ -7,7 +8,7 @@
 
     const DSFForm = {
         currentStep: 1,
-        totalSteps: 4,
+        totalSteps: 2,
         formData: {},
         selectedService: null,
 
@@ -17,7 +18,7 @@
         init: function() {
             this.cacheElements();
             this.bindEvents();
-            this.initializeService();
+            this.autoLoadServiceFromUrl();
         },
 
         /**
@@ -25,10 +26,10 @@
          */
         cacheElements: function() {
             this.$form = $('#dsf-form');
-            this.$serviceSelection = $('[name="service_selection"]');
+            this.$serviceSelect = $('#dsf-service-select');
             this.$locationSelect = $('#dsf-location');
-            this.$packageRadios = $('[name="package"]');
-            this.$portalCheckboxes = $('[name="portals[]"]');
+            this.$packageRadios = $('[name="package_id"]');
+            this.$portalCheckboxes = $('[name="portal_ids[]"]');
             this.$calculatorAmount = $('#dsf-calculator-amount');
         },
 
@@ -38,9 +39,15 @@
         bindEvents: function() {
             const self = this;
 
-            // Service selection
-            this.$serviceSelection.on('change', function() {
-                self.onServiceSelected($(this));
+            // Service selection from dropdown
+            this.$serviceSelect.on('change', function() {
+                const serviceId = $(this).val();
+                if (serviceId) {
+                    self.loadPricingOptions(serviceId);
+                } else {
+                    $('#dsf-pricing-options-container').empty();
+                    self.updatePriceDisplay(0);
+                }
             });
 
             // Next/Previous button clicks
@@ -63,52 +70,40 @@
             });
 
             // Real-time price calculation
-            this.$locationSelect.on('change', function() {
-                self.calculatePrice();
-            });
-
-            this.$packageRadios.on('change', function() {
-                self.calculatePrice();
-            });
-
-            this.$portalCheckboxes.on('change', function() {
-                self.calculatePrice();
-            });
-
-            this.$calculatorAmount.on('change', function() {
+            $(document).on('change', '#dsf-location, [name="package_id"], [name="portal_ids[]"], #dsf-calculator-amount', function() {
                 self.calculatePrice();
             });
         },
 
         /**
-         * Initialize service if URL parameters exist
+         * Load pricing options via AJAX
          */
-        initializeService: function() {
-            const serviceType = $('[name="service_type"]').val();
-            const serviceCategory = $('[name="service_category"]').val();
-            const serviceName = $('[name="service_name"]').val();
-
-            if (serviceType && serviceCategory && serviceName) {
-                // Service is set via URL parameters, skip step 1
-                this.loadPricingOptions();
-            }
-        },
-
-        /**
-         * Handle service selection
-         */
-        onServiceSelected: function($radio) {
-            this.selectedService = {
-                id: $radio.val(),
-                type: $radio.data('type'),
-                category: $radio.data('category'),
-                name: $radio.data('name'),
+        loadPricingOptions: function(serviceId) {
+            const self = this;
+            const data = {
+                action: 'dsf_get_pricing_options',
+                nonce: dsfFrontend.nonce,
+                service_id: serviceId,
             };
 
-            // Update hidden fields
-            $('[name="service_type"]').val(this.selectedService.type);
-            $('[name="service_category"]').val(this.selectedService.category);
-            $('[name="service_name"]').val(this.selectedService.name);
+            $.ajax({
+                url: dsfFrontend.ajaxUrl,
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        $('#dsf-pricing-options-container').html(response.data.html);
+                        self.cacheElements();
+                        self.bindEvents();
+                        self.calculatePrice();
+                    } else {
+                        alert('Error loading pricing options');
+                    }
+                },
+                error: function() {
+                    alert('Error loading pricing options');
+                },
+            });
         },
 
         /**
@@ -118,13 +113,6 @@
             if (!this.validateStep(step)) {
                 return;
             }
-
-            if (step === 1) {
-                this.loadPricingOptions();
-            } else if (step === 3) {
-                this.loadReviewSummary();
-            }
-
             this.moveNext();
         },
 
@@ -135,20 +123,16 @@
             let isValid = true;
 
             switch (step) {
-                case 1: // Service selection
-                    if ($('[name="service_selection"]:checked').length === 0) {
+                case 1: // Service + Pricing
+                    if (!this.$serviceSelect.val()) {
                         alert(dsfFrontend.validateMessages?.selectService || 'Please select a service');
                         isValid = false;
-                    }
-                    break;
-
-                case 2: // Pricing options
-                    if (!this.validatePricingStep()) {
+                    } else if (!this.validatePricingStep()) {
                         isValid = false;
                     }
                     break;
 
-                case 3: // Contact information
+                case 2: // Contact information
                     if (!this.validateContactInfo()) {
                         isValid = false;
                     }
@@ -170,14 +154,14 @@
                         alert('Please select a location');
                         return false;
                     }
-                    if (this.hasPackages() && !$('[name="package"]:checked').val()) {
+                    if (this.hasPackages() && !$('[name="package_id"]:checked').val()) {
                         alert('Please select a package');
                         return false;
                     }
                     break;
 
                 case 'portal_based':
-                    if ($('[name="portals[]"]:checked').length === 0) {
+                    if ($('[name="portal_ids[]"]:checked').length === 0) {
                         alert('Please select at least one portal');
                         return false;
                     }
@@ -198,22 +182,18 @@
          * Validate contact information
          */
         validateContactInfo: function() {
-            const businessName = $('#dsf-business-name').val().trim();
-            const email = $('#dsf-email').val().trim();
-            const phone = $('#dsf-phone').val().trim();
-
-            if (!businessName) {
-                alert('Please enter business name');
-                return false;
+            const requiredFields = ['first_name', 'last_name', 'business_name', 'business_address', 'city', 'state', 'zipcode', 'email', 'phone'];
+            
+            for (let field of requiredFields) {
+                const value = $('#dsf-' + field.replace(/_/g, '-')).val().trim();
+                if (!value) {
+                    alert('Please fill in all required fields');
+                    return false;
+                }
             }
 
-            if (!this.isValidEmail(email)) {
+            if (!this.isValidEmail($('#dsf-email').val())) {
                 alert('Please enter a valid email');
-                return false;
-            }
-
-            if (!phone) {
-                alert('Please enter phone number');
                 return false;
             }
 
@@ -236,6 +216,7 @@
                 $('.dsf-step').hide();
                 this.currentStep++;
                 $('.dsf-step-' + this.currentStep).show();
+                this.updateProgressBar();
             }
         },
 
@@ -247,35 +228,18 @@
                 $('.dsf-step').hide();
                 this.currentStep--;
                 $('.dsf-step-' + this.currentStep).show();
+                this.updateProgressBar();
             }
         },
 
         /**
-         * Load pricing options via AJAX
+         * Update progress bar
          */
-        loadPricingOptions: function() {
-            const self = this;
-            const data = {
-                action: 'dsf_get_pricing_options',
-                nonce: dsfFrontend.nonce,
-                service_type: $('[name="service_type"]').val(),
-                service_category: $('[name="service_category"]').val(),
-                service_name: $('[name="service_name"]').val(),
-            };
-
-            $.ajax({
-                url: dsfFrontend.ajaxUrl,
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    if (response.success) {
-                        const options = response.data;
-                        $('#dsf-pricing-options').html(options.html);
-                        self.cacheElements();
-                        self.bindEvents();
-                    }
-                },
-            });
+        updateProgressBar: function() {
+            $('.dsf-progress-item').removeClass('dsf-active');
+            for (let i = 1; i <= this.currentStep; i++) {
+                $('.dsf-progress-item').eq(i - 1).addClass('dsf-active');
+            }
         },
 
         /**
@@ -283,18 +247,19 @@
          */
         calculatePrice: function() {
             const self = this;
-            const serviceType = $('[name="service_type"]').val();
-            const serviceCategory = $('[name="service_category"]').val();
-            const serviceName = $('[name="service_name"]').val();
+            const serviceId = this.$serviceSelect.val();
+
+            if (!serviceId) {
+                this.updatePriceDisplay(0);
+                return;
+            }
 
             const data = {
                 action: 'dsf_calculate_price',
                 nonce: dsfFrontend.nonce,
-                service_type: serviceType,
-                service_category: serviceCategory,
-                service_name: serviceName,
+                service_id: serviceId,
                 location_id: this.$locationSelect.val() || 0,
-                package_id: $('[name="package"]:checked').val() || 0,
+                package_id: $('[name="package_id"]:checked').val() || 0,
                 portal_ids: this.getSelectedPortals(),
                 calculator_amount: this.$calculatorAmount.val() || 0,
             };
@@ -306,52 +271,29 @@
                 success: function(response) {
                     if (response.success) {
                         const totalPrice = response.data.total_price;
-                        self.updatePriceDisplay(totalPrice);
+                        const priceLabel = response.data.price_label || 'Service Fee';
+                        self.updatePriceDisplay(totalPrice, priceLabel);
                     }
                 },
             });
         },
 
         /**
-         * Update price display
+         * Update price display in the price table
          */
-        updatePriceDisplay: function(totalPrice) {
+        updatePriceDisplay: function(totalPrice, label = 'Service Fee') {
             const formattedPrice = '$' + parseFloat(totalPrice).toFixed(2);
-            $('#dsf-total-price').text(formattedPrice);
+            $('#dsf-price-label').text(label);
+            $('#dsf-price-value').text(formattedPrice);
+            $('#dsf-total-price-display').text(formattedPrice);
         },
 
         /**
          * Get selected portals
          */
         getSelectedPortals: function() {
-            return $.map($('[name="portals[]"]:checked'), function(el) {
+            return $.map($('[name="portal_ids[]"]:checked'), function(el) {
                 return $(el).val();
-            });
-        },
-
-        /**
-         * Load review summary
-         */
-        loadReviewSummary: function() {
-            const self = this;
-            const formData = this.collectFormData();
-
-            const data = {
-                action: 'dsf_get_review_summary',
-                nonce: dsfFrontend.nonce,
-                form_data: formData,
-            };
-
-            $.ajax({
-                url: dsfFrontend.ajaxUrl,
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    if (response.success) {
-                        $('#dsf-review-summary').html(response.data.html);
-                        self.calculatePrice();
-                    }
-                },
             });
         },
 
@@ -360,12 +302,10 @@
          */
         collectFormData: function() {
             return {
-                service_type: $('[name="service_type"]').val(),
-                service_category: $('[name="service_category"]').val(),
-                service_name: $('[name="service_name"]').val(),
+                service_id: this.$serviceSelect.val(),
                 location_id: this.$locationSelect.val() || null,
-                package: $('[name="package"]:checked').val() || null,
-                portals: this.getSelectedPortals(),
+                package_id: $('[name="package_id"]:checked').val() || null,
+                portal_ids: this.getSelectedPortals(),
                 calculator_amount: this.$calculatorAmount.val() || null,
                 first_name: $('#dsf-first-name').val(),
                 last_name: $('#dsf-last-name').val(),
@@ -403,32 +343,28 @@
                         // Hide form and show success message
                         self.$form.hide();
                         $('.dsf-success-message').show();
-
-                        // Optional: Redirect or perform other actions
                         console.log('Form submitted successfully:', response.data);
                     } else {
                         alert(response.data.message || 'Error submitting form');
                     }
                 },
                 error: function() {
-                    alert('Error submitting form');
+                    alert('Error submitting form. Please try again.');
                 },
             });
         },
 
         /**
-         * Get pricing model
+         * Get pricing model from visible options
          */
         getPricingModel: function() {
-            // This would typically come from the loaded pricing options
-            // For now, we'll infer it from what's visible
-            if (this.$locationSelect.length) {
+            if (this.$locationSelect.length && this.$locationSelect.is(':visible')) {
                 return 'state_based';
             }
-            if (this.$portalCheckboxes.length) {
+            if (this.$portalCheckboxes.length && this.$portalCheckboxes.is(':visible')) {
                 return 'portal_based';
             }
-            if (this.$calculatorAmount.length) {
+            if (this.$calculatorAmount.length && this.$calculatorAmount.is(':visible')) {
                 return 'calculator';
             }
             return 'fixed_price';
@@ -438,7 +374,102 @@
          * Check if service has packages
          */
         hasPackages: function() {
-            return $('[name="package"]').length > 0;
+            return $('[name="package_id"]').length > 0;
+        },
+
+        /**
+         * Get URL parameter by name
+         */
+        getUrlParameter: function(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        },
+
+        /**
+         * Auto-load service from URL parameters
+         * Handles: service_type, service_category, service_name, pkg
+         */
+        autoLoadServiceFromUrl: function() {
+            const self = this;
+            
+            // Get parameters from URL
+            const serviceType = this.getUrlParameter('service_type');
+            const serviceCategory = this.getUrlParameter('service_category');
+            const serviceName = this.getUrlParameter('service_name');
+            const packageName = this.getUrlParameter('pkg');
+            
+            // Type and Category are required to find service
+            if (!serviceType || !serviceCategory) {
+                return;
+            }
+            
+            // Find service by type, category, and optionally name
+            this.findAndSelectService(serviceType, serviceCategory, serviceName, packageName);
+        },
+
+        /**
+         * Find service matching type/category/name and select it
+         */
+        findAndSelectService: function(type, category, name, packageName) {
+            const self = this;
+            
+            // Get all options and find matching service
+            let selectedServiceId = null;
+            
+            this.$serviceSelect.find('option').each(function() {
+                const $option = $(this);
+                const optionText = $option.text();
+                
+                // Check if option text matches the category pattern
+                // Text format is "Category - Name"
+                if (optionText.includes(category)) {
+                    // If name is not provided, select first match of type/category
+                    if (!name) {
+                        selectedServiceId = $option.val();
+                        return false; // Break loop
+                    }
+                    
+                    // If name is provided, match exact name in the option
+                    if (optionText.includes(name) || optionText.toLowerCase().includes(name.toLowerCase())) {
+                        selectedServiceId = $option.val();
+                        return false; // Break loop
+                    }
+                }
+            });
+            
+            // If service found, select it and load pricing
+            if (selectedServiceId) {
+                this.$serviceSelect.val(selectedServiceId);
+                
+                // Load pricing options via AJAX
+                setTimeout(function() {
+                    self.loadPricingOptions(selectedServiceId);
+                    
+                    // If package name is provided, auto-select it after pricing loads
+                    if (packageName) {
+                        setTimeout(function() {
+                            self.autoSelectPackage(packageName);
+                        }, 500);
+                    }
+                }, 100);
+            }
+        },
+
+        /**
+         * Auto-select package by name after pricing loads
+         */
+        autoSelectPackage: function(packageName) {
+            // Find and select the package radio/checkbox matching the name
+            $('[name="package_id"]').each(function() {
+                const $input = $(this);
+                const $label = $input.closest('.dsf-package-card, .dsf-package-option').find('label, .dsf-package-name, .dsf-label-text');
+                const labelText = $label.text().toLowerCase();
+                
+                if (labelText.includes(packageName.toLowerCase())) {
+                    $input.prop('checked', true).trigger('change');
+                    return false; // Break loop
+                }
+            });
         },
     };
 
@@ -448,3 +479,4 @@
     });
 
 })(jQuery);
+

@@ -51,19 +51,14 @@ class Ajax {
     public function get_pricing_options() {
         check_ajax_referer('dsf_form_nonce', 'nonce');
         
-        $service_type = isset($_POST['service_type']) ? sanitize_text_field($_POST['service_type']) : '';
-        $service_category = isset($_POST['service_category']) ? sanitize_text_field($_POST['service_category']) : '';
-        $service_name = isset($_POST['service_name']) ? sanitize_text_field($_POST['service_name']) : '';
         $service_id = isset($_POST['service_id']) ? intval($_POST['service_id']) : 0;
         
-        // Load service either by ID or by identifiers
-        if ($service_id) {
-            $service = new Service($service_id);
-        } else {
-            $service = Service::get_by_identifier($service_type, $service_category, $service_name);
+        if (!$service_id) {
+            wp_send_json_error(['message' => 'Service not found']);
         }
         
-        if (!$service || !$service->get_id()) {
+        $service = new Service($service_id);
+        if (!$service->get_id()) {
             wp_send_json_error(['message' => 'Service not found']);
         }
         
@@ -89,28 +84,30 @@ class Ajax {
         }
         
         $total_price = 0;
+        $price_label = 'Service Fee';
         $pricing_model = $service->get('pricing_model');
-        $breakdown = [];
         
         switch ($pricing_model) {
             case 'state_based':
                 if ($location_id) {
+                    $location = new Location($location_id);
+                    if ($location->get_id()) {
+                        $price_label = $location->get('name');
+                    }
+                    
                     if ($service->get('has_packages') && $package_id) {
                         // Package pricing model: get price from ServicePackagePricing
                         $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service->get_id(), $package_id);
                         if ($package_pricing) {
                             $total_price = floatval($package_pricing['price'] ?? 0);
-                            $breakdown['location'] = '';
-                            $breakdown['package'] = $package_pricing['package_type_name'] ?? 'Unknown';
-                            $breakdown['price'] = $total_price;
+                            $price_label = $package_pricing['package_type_name'] ?? 'Package';
                         }
                     } else {
-                        // No packages: use location-based pricing (base tier = standard_price)
+                        // No packages: use location-based pricing (universal or standard tier)
                         $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $location_id);
                         if ($pricing) {
                             $total_price = floatval($pricing['standard_price'] ?? 0);
-                            $breakdown['location'] = $pricing['location_name'];
-                            $breakdown['price'] = $total_price;
+                            $price_label = $pricing['location_name'] ?? 'Service Fee';
                         }
                     }
                 }
@@ -122,28 +119,28 @@ class Ajax {
                     if ($portal->get_id()) {
                         $price = floatval($portal->get('price') ?? 0);
                         $total_price += $price;
-                        $breakdown['portals'][] = [
-                            'name' => $portal->get('portal_name'),
-                            'price' => $price,
-                        ];
                     }
                 }
+                $price_label = count($portal_ids) > 1 ? 'Multiple Portals' : 'Portal Fee';
                 break;
                 
             case 'fixed_price':
-                // TODO: Get fixed price from service configuration
-                $total_price = 0;
+                // Get fixed price from service configuration
+                $fixed_price = $service->get('fixed_price') ?? 0;
+                $total_price = floatval($fixed_price);
+                $price_label = 'Fixed Price';
                 break;
                 
             case 'calculator':
-                // TODO: Implement pricing formula based on calculator amount
-                $total_price = $calculator_amount;
+                // Calculator with tiered pricing
+                $total_price = $this->calculate_tiered_price($calculator_amount);
+                $price_label = 'Calculated Fee';
                 break;
         }
         
         wp_send_json_success([
             'total_price' => round($total_price, 2),
-            'breakdown' => $breakdown,
+            'price_label' => $price_label,
         ]);
     }
 
@@ -231,8 +228,8 @@ class Ajax {
         // Sanitize form data
         $form_data = [
             'location_id' => isset($_POST['location_id']) ? intval($_POST['location_id']) : null,
-            'package' => isset($_POST['package']) ? intval($_POST['package']) : null,
-            'portals' => isset($_POST['portals']) ? array_map('intval', (array) $_POST['portals']) : [],
+            'package_id' => isset($_POST['package_id']) ? intval($_POST['package_id']) : null,
+            'portal_ids' => isset($_POST['portal_ids']) ? array_map('intval', (array) $_POST['portal_ids']) : [],
             'calculator_amount' => isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : null,
             'first_name' => sanitize_text_field($_POST['first_name']),
             'last_name' => sanitize_text_field($_POST['last_name']),
@@ -302,9 +299,9 @@ class Ajax {
         switch ($pricing_model) {
             case 'state_based':
                 if (!empty($form_data['location_id'])) {
-                    if ($service->get('has_packages') && !empty($form_data['package'])) {
+                    if ($service->get('has_packages') && !empty($form_data['package_id'])) {
                         // Package pricing: get price from ServicePackagePricing
-                        $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service_id, $form_data['package']);
+                        $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service_id, $form_data['package_id']);
                         if ($package_pricing) {
                             $total_price = floatval($package_pricing['price'] ?? 0);
                         }
@@ -319,7 +316,7 @@ class Ajax {
                 break;
                 
             case 'portal_based':
-                foreach ($form_data['portals'] as $portal_id) {
+                foreach ($form_data['portal_ids'] as $portal_id) {
                     $portal = new Portal($portal_id);
                     if ($portal->get_id()) {
                         $total_price += floatval($portal->get('price') ?? 0);
@@ -328,10 +325,33 @@ class Ajax {
                 break;
                 
             case 'calculator':
-                $total_price = floatval($form_data['calculator_amount'] ?? 0);
+                $total_price = $this->calculate_tiered_price($form_data['calculator_amount'] ?? 0);
                 break;
         }
         
         return round($total_price, 2);
+    }
+
+    /**
+     * Calculate price based on tiered calculator pricing
+     * Tiers:
+     * - $350,000 - $500,000: $900.00
+     * - $500,000 - $2,000,000: $1,500.00
+     * - $2,000,000+: 1% of total amount
+     *
+     * @param float $amount The amount entered by user
+     * @return float Calculated price
+     */
+    private function calculate_tiered_price($amount) {
+        if ($amount < 350000) {
+            return 0; // Below minimum threshold
+        } else if ($amount >= 350000 && $amount < 500000) {
+            return 900.00;
+        } else if ($amount >= 500000 && $amount < 2000000) {
+            return 1500.00;
+        } else {
+            // $2,000,000+: 1% of total amount
+            return $amount * 0.01;
+        }
     }
 }

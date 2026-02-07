@@ -1,35 +1,117 @@
 /**
- * Dynamic Services Form - Frontend Styles
+ * Dynamic Services Form - Frontend Styles (2-Step Design)
+ * Professional theme with teal/green color scheme
  */
 
-.dsf-form-wrapper {
-    max-width: 800px;
-    margin: 30px auto;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+:root {
+    --primary-color: #1a9b8e;
+    --primary-hover: #158076;
+    --primary-light: #f0f8f6;
+    --secondary-color: #f0f0f0;
+    --secondary-hover: #e0e0e0;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --border-color: #e0e0e0;
+    --error-color: #e74c3c;
 }
 
+.dsf-form-wrapper {
+    max-width: 900px;
+    margin: 40px auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    padding: 0 15px;
+}
+
+/* Progress Bar */
+.dsf-progress-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
+    padding: 0 20px;
+}
+
+.dsf-progress-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.dsf-progress-item.dsf-active {
+    opacity: 1;
+}
+
+.dsf-progress-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--secondary-color);
+    border: 3px solid var(--border-color);
+    border-radius: 50%;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.dsf-progress-item.dsf-active .dsf-progress-number {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 8px rgba(26, 155, 142, 0.15);
+}
+
+.dsf-progress-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    text-align: center;
+}
+
+.dsf-progress-item.dsf-active .dsf-progress-label {
+    color: var(--primary-color);
+}
+
+.dsf-progress-line {
+    flex: 0.5;
+    height: 3px;
+    background-color: var(--border-color);
+    margin: 0 10px;
+    position: relative;
+    top: -24px;
+}
+
+/* Form Wrapper */
 .dsf-form {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 30px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* Steps */
 .dsf-step {
     display: none;
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.4s ease-in;
 }
 
-.dsf-step.active {
+.dsf-step:first-of-type {
     display: block;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(15px);
     }
     to {
         opacity: 1;
@@ -37,15 +119,518 @@
     }
 }
 
-.dsf-step h2 {
-    margin-top: 0;
-    margin-bottom: 25px;
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 15px;
+.dsf-step-title {
+    margin: 0 0 30px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
 }
+
+/* Form Grid Layout */
+.dsf-form-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px 20px;
+    margin-bottom: 30px;
+}
+
+.dsf-field-4 {
+    grid-column: span 4;
+}
+
+.dsf-field-6 {
+    grid-column: span 6;
+}
+
+.dsf-field-12 {
+    grid-column: span 12;
+}
+
+/* Form Fields */
+.dsf-field-group {
+    margin-bottom: 0;
+}
+
+.dsf-field-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    letter-spacing: 0.3px;
+}
+
+.dsf-required {
+    color: var(--error-color);
+    margin-left: 4px;
+}
+
+.dsf-field-group input[type="text"],
+.dsf-field-group input[type="email"],
+.dsf-field-group input[type="tel"],
+.dsf-field-group input[type="number"],
+.dsf-field-group select,
+.dsf-field-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    background-color: #fafafa;
+    color: var(--text-primary);
+}
+
+.dsf-field-group input[type="text"]::placeholder,
+.dsf-field-group input[type="email"]::placeholder,
+.dsf-field-group input[type="tel"]::placeholder,
+.dsf-field-group input[type="number"]::placeholder {
+    color: var(--text-secondary);
+}
+
+.dsf-field-group input[type="text"]:focus,
+.dsf-field-group input[type="email"]:focus,
+.dsf-field-group input[type="tel"]:focus,
+.dsf-field-group input[type="number"]:focus,
+.dsf-field-group select:focus,
+.dsf-field-group textarea:focus {
+    outline: none;
+    background-color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(26, 155, 142, 0.1);
+}
+
+/* Packages Container */
+.dsf-packages-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.dsf-package-item {
+    display: block;
+    padding: 18px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.dsf-package-item:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+}
+
+.dsf-package-item input[type="radio"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.dsf-package-item input[type="radio"]:checked + .dsf-package-name {
+    color: var(--primary-color);
+}
+
+.dsf-package-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.dsf-package-price {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Portals Container */
+.dsf-portals-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.dsf-portal-item {
+    display: block;
+    padding: 18px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.dsf-portal-item:hover {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+}
+
+.dsf-portal-item input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.dsf-portal-item input[type="checkbox"]:checked + .dsf-portal-name {
+    color: var(--primary-color);
+}
+
+.dsf-portal-name {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.dsf-portal-price {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Fixed Price Display */
+.dsf-fixed-price-display {
+    background-color: var(--primary-light);
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.dsf-fixed-price-notice {
+    margin: 0;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Calculator */
+#dsf-calculator-amount {
+    font-size: 16px !important;
+}
+
+.dsf-calculator-tiers {
+    background-color: var(--primary-light);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.dsf-calculator-tiers h4 {
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dsf-calculator-tiers ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dsf-calculator-tiers li {
+    padding: 8px 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    border-bottom: 1px solid rgba(26, 155, 142, 0.2);
+}
+
+.dsf-calculator-tiers li:last-child {
+    border-bottom: none;
+}
+
+.dsf-calculator-tiers strong {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* Price Display Table */
+.dsf-price-display {
+    margin: 30px 0;
+    background-color: var(--primary-light);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.dsf-price-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.dsf-price-table thead {
+    background-color: var(--primary-color);
+}
+
+.dsf-price-table thead th {
+    color: white;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.dsf-price-table tbody tr {
+    border-top: 1px solid var(--border-color);
+}
+
+.dsf-price-table tbody td {
+    padding: 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.dsf-price-table tbody tr#dsf-price-row td:last-child {
+    text-align: right;
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 18px;
+}
+
+.dsf-price-table tfoot .dsf-price-total-row {
+    background-color: var(--primary-color);
+}
+
+.dsf-price-table tfoot .dsf-price-total-row td {
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+#dsf-total-price-display {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+/* Buttons */
+.dsf-button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 35px;
+    justify-content: flex-end;
+}
+
+.dsf-btn {
+    padding: 13px 28px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+.dsf-btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.dsf-btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26, 155, 142, 0.3);
+}
+
+.dsf-btn-primary:active {
+    transform: translateY(0);
+}
+
+.dsf-btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--text-primary);
+}
+
+.dsf-btn-secondary:hover {
+    background-color: var(--secondary-hover);
+}
+
+/* Success Message */
+.dsf-success-message {
+    text-align: center;
+    padding: 50px 40px;
+    background-color: var(--primary-light);
+    border-radius: 12px;
+}
+
+.dsf-success-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+    border-radius: 50%;
+    margin: 0 auto 25px;
+}
+
+.dsf-success-message h2 {
+    margin: 0 0 15px 0;
+    font-size: 28px;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.dsf-success-message p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dsf-form {
+        padding: 30px;
+    }
+
+    .dsf-field-4 {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 768px) {
+    .dsf-form-wrapper {
+        margin: 20px auto;
+    }
+
+    .dsf-form {
+        padding: 25px;
+    }
+
+    .dsf-progress-bar {
+        padding: 0 10px;
+        margin-bottom: 30px;
+    }
+
+    .dsf-progress-number {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .dsf-progress-label {
+        font-size: 11px;
+    }
+
+    .dsf-step-title {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .dsf-form-grid {
+        gap: 18px 15px;
+    }
+
+    .dsf-field-4,
+    .dsf-field-6,
+    .dsf-field-12 {
+        grid-column: span 12;
+    }
+
+    .dsf-button-group {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .dsf-btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .dsf-packages-container,
+    .dsf-portals-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .dsf-form-wrapper {
+        margin: 15px;
+        padding: 0;
+    }
+
+    .dsf-form {
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .dsf-progress-bar {
+        flex-direction: column;
+        padding: 0;
+        margin-bottom: 25px;
+    }
+
+    .dsf-progress-line {
+        width: 3px;
+        height: 30px;
+        flex: auto;
+        margin: 10px 0;
+        top: 0;
+    }
+
+    .dsf-progress-number {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+        margin-bottom: 5px;
+    }
+
+    .dsf-step-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .dsf-field-group input,
+    .dsf-field-group textarea,
+    .dsf-field-group select {
+        font-size: 16px; /* Prevents iOS zoom */
+        border-radius: 4px;
+    }
+
+    .dsf-price-display {
+        margin: 20px -20px;
+    }
+
+    .dsf-price-table thead th,
+    .dsf-price-table tbody td {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .dsf-success-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 32px;
+    }
+
+    .dsf-success-message {
+        padding: 30px 20px;
+    }
+
+    .dsf-success-message h2 {
+        font-size: 22px;
+    }
+}
+
 
 /* Service Selection */
 .dsf-service-selection {
