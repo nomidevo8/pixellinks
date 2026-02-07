@@ -78,7 +78,7 @@ class Ajax {
         check_ajax_referer('dsf_form_nonce', 'nonce');
         
         $service_id = isset($_POST['service_id']) ? intval($_POST['service_id']) : 0;
-        $state_id = isset($_POST['state_id']) ? intval($_POST['state_id']) : 0;
+        $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
         $package_id = isset($_POST['package_id']) ? intval($_POST['package_id']) : 0;
         $portal_ids = isset($_POST['portal_ids']) ? array_map('intval', (array) $_POST['portal_ids']) : [];
         $calculator_amount = isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : 0;
@@ -94,8 +94,7 @@ class Ajax {
         
         switch ($pricing_model) {
             case 'state_based':
-                if ($state_id) {
-                    // state_id is actually location_id in the new schema
+                if ($location_id) {
                     if ($service->get('has_packages') && $package_id) {
                         // Package pricing model: get price from ServicePackagePricing
                         $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service->get_id(), $package_id);
@@ -107,7 +106,7 @@ class Ajax {
                         }
                     } else {
                         // No packages: use location-based pricing (base tier = standard_price)
-                        $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $state_id);
+                        $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $location_id);
                         if ($pricing) {
                             $total_price = floatval($pricing['standard_price'] ?? 0);
                             $breakdown['location'] = $pricing['location_name'];
@@ -222,7 +221,7 @@ class Ajax {
         }
         
         // Validate required fields
-        $required_fields = ['business_name', 'email', 'phone'];
+        $required_fields = ['first_name', 'last_name', 'business_name', 'business_address', 'phone', 'email', 'city', 'state', 'zipcode'];
         foreach ($required_fields as $field) {
             if (empty($_POST[$field])) {
                 wp_send_json_error(['message' => sprintf('Field %s is required', $field)]);
@@ -231,13 +230,19 @@ class Ajax {
         
         // Sanitize form data
         $form_data = [
-            'state' => isset($_POST['state']) ? intval($_POST['state']) : null,
+            'location_id' => isset($_POST['location_id']) ? intval($_POST['location_id']) : null,
             'package' => isset($_POST['package']) ? intval($_POST['package']) : null,
             'portals' => isset($_POST['portals']) ? array_map('intval', (array) $_POST['portals']) : [],
             'calculator_amount' => isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : null,
+            'first_name' => sanitize_text_field($_POST['first_name']),
+            'last_name' => sanitize_text_field($_POST['last_name']),
             'business_name' => sanitize_text_field($_POST['business_name']),
-            'email' => sanitize_email($_POST['email']),
+            'business_address' => sanitize_text_field($_POST['business_address']),
             'phone' => sanitize_text_field($_POST['phone']),
+            'email' => sanitize_email($_POST['email']),
+            'city' => sanitize_text_field($_POST['city']),
+            'state' => sanitize_text_field($_POST['state']),
+            'zipcode' => sanitize_text_field($_POST['zipcode']),
             'entity_type' => isset($_POST['entity_type']) ? sanitize_text_field($_POST['entity_type']) : '',
             'notes' => isset($_POST['notes']) ? sanitize_textarea_field($_POST['notes']) : '',
         ];
@@ -253,14 +258,20 @@ class Ajax {
                 'service_id' => $service->get_id(),
                 'form_data' => wp_json_encode($form_data),
                 'total_price' => $total_price,
+                'first_name' => $form_data['first_name'],
+                'last_name' => $form_data['last_name'],
                 'business_name' => $form_data['business_name'],
-                'email' => $form_data['email'],
+                'business_address' => $form_data['business_address'],
                 'phone' => $form_data['phone'],
+                'email' => $form_data['email'],
+                'city' => $form_data['city'],
+                'state' => $form_data['state'],
+                'zipcode' => $form_data['zipcode'],
                 'entity_type' => $form_data['entity_type'],
                 'notes' => $form_data['notes'],
                 'status' => 'pending',
             ],
-            ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s']
+            ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
         );
         
         if (!$result) {
@@ -290,8 +301,7 @@ class Ajax {
         
         switch ($pricing_model) {
             case 'state_based':
-                if (!empty($form_data['state'])) {
-                    // form_data['state'] contains location_id
+                if (!empty($form_data['location_id'])) {
                     if ($service->get('has_packages') && !empty($form_data['package'])) {
                         // Package pricing: get price from ServicePackagePricing
                         $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service_id, $form_data['package']);
@@ -300,7 +310,7 @@ class Ajax {
                         }
                     } else {
                         // Location pricing: use standard_price tier
-                        $pricing = ServiceLocationPricing::get_by_service_and_location($service_id, $form_data['state']);
+                        $pricing = ServiceLocationPricing::get_by_service_and_location($service_id, $form_data['location_id']);
                         if ($pricing) {
                             $total_price = floatval($pricing['standard_price'] ?? 0);
                         }

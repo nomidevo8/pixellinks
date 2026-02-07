@@ -89,11 +89,40 @@ class Form {
                 <!-- Step 3: Static Fields -->
                 <div class="dsf-step dsf-step-3" data-step="3" style="display:none;">
                     <h2><?php esc_html_e('Step 3: Contact Information', 'dynamic-services-form'); ?></h2>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-first-name">
+                            <?php esc_html_e('First Name', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="text" id="dsf-first-name" name="first_name" required>
+                    </div>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-last-name">
+                            <?php esc_html_e('Last Name', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="text" id="dsf-last-name" name="last_name" required>
+                    </div>
+                    
                     <div class="dsf-field-group">
                         <label for="dsf-business-name">
                             <?php esc_html_e('Business Name', 'dynamic-services-form'); ?> <span class="required">*</span>
                         </label>
                         <input type="text" id="dsf-business-name" name="business_name" required>
+                    </div>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-business-address">
+                            <?php esc_html_e('Business Address', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="text" id="dsf-business-address" name="business_address" required>
+                    </div>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-phone">
+                            <?php esc_html_e('Phone', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="tel" id="dsf-phone" name="phone" required>
                     </div>
                     
                     <div class="dsf-field-group">
@@ -104,10 +133,24 @@ class Form {
                     </div>
                     
                     <div class="dsf-field-group">
-                        <label for="dsf-phone">
-                            <?php esc_html_e('Phone', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        <label for="dsf-city">
+                            <?php esc_html_e('City', 'dynamic-services-form'); ?> <span class="required">*</span>
                         </label>
-                        <input type="tel" id="dsf-phone" name="phone" required>
+                        <input type="text" id="dsf-city" name="city" required>
+                    </div>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-state">
+                            <?php esc_html_e('State', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="text" id="dsf-state" name="state" required>
+                    </div>
+                    
+                    <div class="dsf-field-group">
+                        <label for="dsf-zipcode">
+                            <?php esc_html_e('Zipcode', 'dynamic-services-form'); ?> <span class="required">*</span>
+                        </label>
+                        <input type="text" id="dsf-zipcode" name="zipcode" required>
                     </div>
                     
                     <div class="dsf-field-group">
@@ -284,10 +327,10 @@ class Form {
         $locations = $service->get_locations();
         ?>
         <div class="dsf-field-group">
-            <label for="dsf-state">
+            <label for="dsf-location">
                 <?php esc_html_e('Select Location', 'dynamic-services-form'); ?> <span class="required">*</span>
             </label>
-            <select id="dsf-state" name="state" required>
+            <select id="dsf-location" name="location_id" required>
                 <option value="">-- <?php esc_html_e('Select a location', 'dynamic-services-form'); ?> --</option>
                 <?php foreach ($locations as $location) : ?>
                     <option value="<?php echo esc_attr($location['location_id']); ?>" 
