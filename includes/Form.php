@@ -48,9 +48,27 @@ class Form {
         $service_category = isset($_GET['service_category']) ? sanitize_text_field($_GET['service_category']) : '';
         $service_name = isset($_GET['service_name']) ? sanitize_text_field($_GET['service_name']) : '';
         
+        // Fetch all services (with full details) for this type + category from backend
+        $services_data = [];
+        if ($service_type && $service_category) {
+            $services_data = Service::get_by_type_and_category($service_type, $service_category);
+        }
+
         // Start output buffering
         ob_start();
         ?>
+        <?php if ($service_type && $service_category) : ?>
+        <!-- DEBUG: Backend data for type & category -->
+        <div class="dsf-debug-backend-data" style="background:#f5f5f5; padding:1rem; margin-bottom:1rem; border:1px solid #ccc; font-family:monospace; font-size:12px;">
+            <strong>Backend data for type="<?php echo esc_attr($service_type); ?>" &amp; category="<?php echo esc_attr($service_category); ?>":</strong>
+            <?php if (empty($services_data)) : ?>
+            <p style="margin:0.5rem 0 0;">No services found for this type and category.</p>
+            <?php else : ?>
+            <p style="margin:0.5rem 0 0;">Fetched <?php echo count($services_data); ?> service(s) with full details (pricing model, packages, locations, portals):</p>
+            <pre style="margin:0.5rem 0 0; white-space:pre-wrap; word-break:break-all;"><?php echo esc_html(print_r($this->format_services_for_display($services_data), true)); ?></pre>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
         <div class="dsf-form-wrapper">
             <!-- Progress Bar -->
             <div class="dsf-progress-bar">
@@ -243,6 +261,41 @@ class Form {
         <?php
         
         return ob_get_clean();
+    }
+
+    /**
+     * Format full services data for debug/display (pricing model + related details)
+     *
+     * @param array $services_data Array from Service::get_by_type_and_category()
+     * @return array Readable structure: per service shows pricing_model and packages/locations/portals as applicable
+     */
+    private function format_services_for_display($services_data) {
+        $out = [];
+        foreach ($services_data as $s) {
+            $item = [
+                'id' => $s['id'],
+                'type' => $s['type'],
+                'category' => $s['category'],
+                'name' => $s['name'],
+                'pricing_model' => $s['pricing_model'],
+                'has_packages' => $s['has_packages'],
+                'description' => $s['description'],
+            ];
+            if ($s['pricing_model'] === 'state_based') {
+                $item['locations'] = $s['locations'];
+                if (!empty($s['has_packages'])) {
+                    $item['packages'] = $s['packages'];
+                }
+            } elseif ($s['pricing_model'] === 'portal_based') {
+                $item['portals'] = $s['portals'];
+            } elseif ($s['pricing_model'] === 'fixed_price') {
+                $item['note'] = 'Fixed price (stored in code or options; no column in DB yet)';
+            } elseif ($s['pricing_model'] === 'calculator') {
+                $item['note'] = 'Calculator: tiered by amount in code ($350k–$500k, $500k–$2M, $2M+)';
+            }
+            $out[] = $item;
+        }
+        return $out;
     }
 
     /**

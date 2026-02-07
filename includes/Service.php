@@ -104,6 +104,45 @@ class Service {
     }
 
     /**
+     * Get enabled services by type and category (with full related data)
+     *
+     * @param string $type     Service type (e.g. USA, UK)
+     * @param string $category Service category (e.g. Core Company)
+     * @return array Array of full service data (packages, locations, portals per service)
+     */
+    public static function get_by_type_and_category($type, $category) {
+        global $wpdb;
+
+        if (empty($type) || empty($category)) {
+            return [];
+        }
+
+        $table = Database::get_table('services');
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE type = %s AND category = %s AND enabled = 1 ORDER BY name",
+                $type,
+                $category
+            ),
+            ARRAY_A
+        );
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($rows as $row) {
+            $service = new self();
+            $service->id = (int) $row['id'];
+            $service->data = $row;
+            $result[] = $service->get_full_data();
+        }
+
+        return $result;
+    }
+
+    /**
      * Save service
      *
      * @param array $args Service data
