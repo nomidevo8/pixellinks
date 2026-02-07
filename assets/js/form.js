@@ -26,7 +26,7 @@
         cacheElements: function() {
             this.$form = $('#dsf-form');
             this.$serviceSelection = $('[name="service_selection"]');
-            this.$stateSelect = $('#dsf-state');
+            this.$locationSelect = $('#dsf-location');
             this.$packageRadios = $('[name="package"]');
             this.$portalCheckboxes = $('[name="portals[]"]');
             this.$calculatorAmount = $('#dsf-calculator-amount');
@@ -63,7 +63,7 @@
             });
 
             // Real-time price calculation
-            this.$stateSelect.on('change', function() {
+            this.$locationSelect.on('change', function() {
                 self.calculatePrice();
             });
 
@@ -166,8 +166,8 @@
 
             switch (pricingModel) {
                 case 'state_based':
-                    if (!this.$stateSelect.val()) {
-                        alert('Please select a state');
+                    if (!this.$locationSelect.val()) {
+                        alert('Please select a location');
                         return false;
                     }
                     if (this.hasPackages() && !$('[name="package"]:checked').val()) {
@@ -293,7 +293,7 @@
                 service_type: serviceType,
                 service_category: serviceCategory,
                 service_name: serviceName,
-                state_id: this.$stateSelect.val() || 0,
+                location_id: this.$locationSelect.val() || 0,
                 package_id: $('[name="package"]:checked').val() || 0,
                 portal_ids: this.getSelectedPortals(),
                 calculator_amount: this.$calculatorAmount.val() || 0,
@@ -363,13 +363,19 @@
                 service_type: $('[name="service_type"]').val(),
                 service_category: $('[name="service_category"]').val(),
                 service_name: $('[name="service_name"]').val(),
-                state: this.$stateSelect.val() || null,
+                location_id: this.$locationSelect.val() || null,
                 package: $('[name="package"]:checked').val() || null,
                 portals: this.getSelectedPortals(),
                 calculator_amount: this.$calculatorAmount.val() || null,
+                first_name: $('#dsf-first-name').val(),
+                last_name: $('#dsf-last-name').val(),
                 business_name: $('#dsf-business-name').val(),
-                email: $('#dsf-email').val(),
+                business_address: $('#dsf-business-address').val(),
                 phone: $('#dsf-phone').val(),
+                email: $('#dsf-email').val(),
+                city: $('#dsf-city').val(),
+                state: $('#dsf-state').val(),
+                zipcode: $('#dsf-zipcode').val(),
                 entity_type: $('#dsf-entity-type').val(),
                 notes: $('#dsf-notes').val(),
             };
@@ -416,7 +422,7 @@
         getPricingModel: function() {
             // This would typically come from the loaded pricing options
             // For now, we'll infer it from what's visible
-            if (this.$stateSelect.length) {
+            if (this.$locationSelect.length) {
                 return 'state_based';
             }
             if (this.$portalCheckboxes.length) {
