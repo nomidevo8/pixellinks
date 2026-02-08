@@ -655,6 +655,8 @@ class Form {
 
             /**
              * Find service matching name and select it
+             * Handles: kebab-case, snake_case, spaces, mixed case
+             * Works with DB names stored as-is (e.g., "reseller-certificate", "director-service-address")
              */
             function findAndSelectService(serviceName, packageName) {
                 var serviceSelect = document.getElementById('dsf-service-select');
@@ -665,16 +667,58 @@ class Form {
                 var selectedServiceId = null;
                 var options = serviceSelect.options;
                 
+                // Normalize the search name: lowercase only (keep hyphens/underscores)
+                var normalizedSearchName = serviceName.toLowerCase().trim();
+                
+                // Also create a space-separated version for matching
+                var spaceSearchName = normalizedSearchName.replace(/-/g, ' ').replace(/_/g, ' ');
+                
                 // Search through all options to find matching service
                 for (var i = 0; i < options.length; i++) {
                     var option = options[i];
-                    var optionText = option.text.toLowerCase();
-                    var searchName = serviceName.toLowerCase().replace(/-/g, ' ');
                     
-                    // Check if option text contains the service name
-                    if (optionText.indexOf(searchName) !== -1) {
+                    // Skip empty options
+                    if (!option.value) {
+                        continue;
+                    }
+                    
+                    // Get option text (format: "Service Name" or "Category - Service Name")
+                    var optionText = option.text;
+                    
+                    // Extract service name if format is "Category - Service Name"
+                    var servicePart = optionText;
+                    if (optionText.indexOf(' - ') !== -1) {
+                        var parts = optionText.split(' - ');
+                        servicePart = parts[parts.length - 1].trim();
+                    }
+                    
+                    // Normalize option text (lowercase)
+                    var normalizedOptionText = servicePart.toLowerCase().trim();
+                    
+                    // Create space-separated version of option text
+                    var spaceOptionText = normalizedOptionText.replace(/-/g, ' ').replace(/_/g, ' ');
+                    
+                    // Try multiple matching strategies (in order of priority):
+                    
+                    // 1. EXACT match (highest priority) - matches "reseller-certificate" with "reseller-certificate"
+                    if (normalizedOptionText === normalizedSearchName) {
                         selectedServiceId = option.value;
                         break;
+                    }
+                    
+                    // 2. EXACT match with spaces - matches "reseller certificate" with "reseller-certificate"
+                    if (spaceOptionText === spaceSearchName) {
+                        selectedServiceId = option.value;
+                        break;
+                    }
+                    
+                    // 3. Contains match (lower priority) - for partial matches
+                    if (!selectedServiceId) {
+                        if (normalizedOptionText.indexOf(normalizedSearchName) !== -1 || 
+                            spaceOptionText.indexOf(spaceSearchName) !== -1) {
+                            selectedServiceId = option.value;
+                            // Don't break - keep looking for exact match
+                        }
                     }
                 }
                 
@@ -697,29 +741,71 @@ class Form {
                             autoSelectPackage(packageName);
                         }, 500);
                     }
+                } else {
+                    console.warn('Service not found for name: ' + serviceName);
                 }
             }
 
             /**
              * Auto-select package by name after pricing loads
+             * Handles: kebab-case, snake_case, spaces, mixed case, partial matches
+             * Works with package names like "standard", "premium", "enterprise"
              */
             function autoSelectPackage(packageName) {
                 var packageInputs = document.querySelectorAll('[name="package_id"]');
-                var searchName = packageName.toLowerCase();
+                
+                // Normalize the search name (lowercase only, keep hyphens)
+                var normalizedSearchName = packageName.toLowerCase().trim();
+                
+                // Also create space-separated version
+                var spaceSearchName = normalizedSearchName.replace(/-/g, ' ').replace(/_/g, ' ');
+                
+                var foundExactMatch = false;
+                var partialMatchInput = null;
                 
                 for (var i = 0; i < packageInputs.length; i++) {
                     var input = packageInputs[i];
                     var packageNameAttr = input.getAttribute('data-package-name');
                     
-                    if (packageNameAttr && packageNameAttr.toLowerCase().indexOf(searchName) !== -1) {
-                        input.checked = true;
+                    if (packageNameAttr) {
+                        // Normalize the package name from data attribute
+                        var normalizedPackageName = packageNameAttr.toLowerCase().trim();
+                        var spacePackageName = normalizedPackageName.replace(/-/g, ' ').replace(/_/g, ' ');
                         
-                        // Trigger change event to update price
-                        if (input.dispatchEvent) {
-                            var event = new Event('change', { bubbles: true });
-                            input.dispatchEvent(event);
+                        // Check for EXACT match first (highest priority)
+                        if (normalizedPackageName === normalizedSearchName || 
+                            spacePackageName === spaceSearchName) {
+                            input.checked = true;
+                            foundExactMatch = true;
+                            
+                            // Trigger change event to update price
+                            if (input.dispatchEvent) {
+                                var event = new Event('change', { bubbles: true });
+                                input.dispatchEvent(event);
+                            }
+                            break;
                         }
-                        break;
+                        
+                        // Store partial match (only if no exact match found yet)
+                        if (!foundExactMatch && !partialMatchInput) {
+                            if (normalizedPackageName.indexOf(normalizedSearchName) !== -1 || 
+                                spacePackageName.indexOf(spaceSearchName) !== -1 ||
+                                normalizedSearchName.indexOf(normalizedPackageName) !== -1 ||
+                                spaceSearchName.indexOf(spacePackageName) !== -1) {
+                                partialMatchInput = input;
+                            }
+                        }
+                    }
+                }
+                
+                // If no exact match found, use partial match
+                if (!foundExactMatch && partialMatchInput) {
+                    partialMatchInput.checked = true;
+                    
+                    // Trigger change event to update price
+                    if (partialMatchInput.dispatchEvent) {
+                        var event = new Event('change', { bubbles: true });
+                        partialMatchInput.dispatchEvent(event);
                     }
                 }
             }
