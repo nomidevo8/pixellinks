@@ -210,6 +210,7 @@ class Admin {
                         <th><?php esc_html_e('Type', 'dynamic-services-form'); ?></th>
                         <th><?php esc_html_e('Category', 'dynamic-services-form'); ?></th>
                         <th><?php esc_html_e('Name', 'dynamic-services-form'); ?></th>
+                        <th><?php esc_html_e('Price', 'dynamic-services-form'); ?></th>
                         <th><?php esc_html_e('Pricing Model', 'dynamic-services-form'); ?></th>
                         <th><?php esc_html_e('Packages', 'dynamic-services-form'); ?></th>
                         <th><?php esc_html_e('Status', 'dynamic-services-form'); ?></th>
@@ -227,7 +228,14 @@ class Admin {
                                 <td><?php echo esc_html($service['type']); ?></td>
                                 <td><?php echo esc_html($service['category']); ?></td>
                                 <td><?php echo esc_html($service['name']); ?></td>
-                                <td><?php echo esc_html($service['pricing_model']); ?></td>
+                                    <td>
+                                        <?php if ($service['pricing_model'] === 'fixed_price' && !empty($service['fixed_price'])) : ?>
+                                            <?php echo '$' . number_format((float) $service['fixed_price'], 2); ?>
+                                        <?php else : ?>
+                                            --
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo esc_html($service['pricing_model']); ?></td>
                                 <td><?php echo $service['has_packages'] ? esc_html__('Yes', 'dynamic-services-form') : esc_html__('No', 'dynamic-services-form'); ?></td>
                                 <td><?php echo $service['enabled'] ? esc_html__('Enabled', 'dynamic-services-form') : esc_html__('Disabled', 'dynamic-services-form'); ?></td>
                                 <td>
@@ -264,6 +272,7 @@ class Admin {
             'category' => '',
             'name' => '',
             'pricing_model' => 'state_based',
+            'fixed_price' => '',
             'has_packages' => 0,
             'description' => '',
             'enabled' => 1,
@@ -327,6 +336,13 @@ class Admin {
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><label for="fixed_price"><?php esc_html_e('Fixed Price', 'dynamic-services-form'); ?></label></th>
+                        <td>
+                            <input type="number" id="fixed_price" name="fixed_price" step="0.01" value="<?php echo esc_attr($service_data['fixed_price']); ?>">
+                            <p class="description"><?php esc_html_e("Used when Pricing Model is 'Fixed Price'. Leave empty otherwise.", 'dynamic-services-form'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><label for="has_packages"><?php esc_html_e('Has Packages', 'dynamic-services-form'); ?></label></th>
                         <td>
                             <input type="checkbox" id="has_packages" name="has_packages" value="1" <?php checked($service_data['has_packages']); ?>>
@@ -372,12 +388,14 @@ class Admin {
         $has_packages = isset($_POST['has_packages']) ? 1 : 0;
         $description = isset($_POST['description']) ? sanitize_textarea_field($_POST['description']) : '';
         $enabled = isset($_POST['enabled']) ? 1 : 0;
+        $fixed_price = isset($_POST['fixed_price']) && $_POST['fixed_price'] !== '' ? floatval($_POST['fixed_price']) : null;
         
         $args = [
             'type' => $type,
             'category' => $category,
             'name' => $name,
             'pricing_model' => $pricing_model,
+            'fixed_price' => $fixed_price,
             'has_packages' => $has_packages,
             'description' => $description,
             'enabled' => $enabled,

@@ -41,6 +41,7 @@ class Database {
             type VARCHAR(100) NOT NULL,
             category VARCHAR(100) NOT NULL,
             name VARCHAR(255) NOT NULL,
+            fixed_price DECIMAL(10,2) DEFAULT NULL,
             pricing_model VARCHAR(50) NOT NULL DEFAULT 'state_based',
             has_packages TINYINT(1) NOT NULL DEFAULT 0,
             description LONGTEXT,

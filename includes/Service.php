@@ -156,6 +156,7 @@ class Service {
             'category' => '',
             'name' => '',
             'pricing_model' => 'state_based',
+            'fixed_price' => null,
             'has_packages' => 0,
             'description' => '',
             'enabled' => 1,
@@ -174,7 +175,7 @@ class Service {
                 $table,
                 $data,
                 ['id' => $id],
-                ['%s', '%s', '%s', '%s', '%d', '%s', '%d'],
+                ['%s', '%s', '%s', '%s', '%f', '%d', '%s', '%d'],
                 ['%d']
             );
             
@@ -184,7 +185,7 @@ class Service {
             $wpdb->insert(
                 $table,
                 $data,
-                ['%s', '%s', '%s', '%s', '%d', '%s', '%d']
+                ['%s', '%s', '%s', '%s', '%f', '%d', '%s', '%d']
             );
             
             return $wpdb->insert_id;
@@ -292,6 +293,7 @@ class Service {
             'category' => $this->get('category'),
             'name' => $this->get('name'),
             'pricing_model' => $this->get('pricing_model'),
+            'fixed_price' => $this->get('fixed_price'),
             'has_packages' => (bool) $this->get('has_packages'),
             'description' => $this->get('description'),
             'packages' => $this->get_packages(),
