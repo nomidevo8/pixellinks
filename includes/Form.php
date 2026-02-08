@@ -58,6 +58,11 @@ class Form {
         ob_start();
         ?>
         <?php if ($service_type && $service_category) : ?>
+        <!-- Embed services data in JavaScript -->
+        <script type="text/javascript">
+            var DSF_SERVICES_DATA = <?php echo wp_json_encode($services_data); ?>;
+        </script>
+        
         <!-- DEBUG: Backend data for type & category -->
         <div class="dsf-debug-backend-data" style="background:#f5f5f5; padding:1rem; margin-bottom:1rem; border:1px solid #ccc; font-family:monospace; font-size:12px;">
             <strong>Backend data for type="<?php echo esc_attr($service_type); ?>" &amp; category="<?php echo esc_attr($service_category); ?>":</strong>
@@ -102,13 +107,13 @@ class Form {
                         </label>
                         <select id="dsf-service-select" name="service_id" required>
                             <option value=""><?php esc_html_e('-- Select a Service --', 'dynamic-services-form'); ?></option>
-                            <?php $this->render_service_dropdown_options(); ?>
+                            <?php $this->render_filtered_service_options($services_data); ?>
                         </select>
                     </div>
 
                     <!-- Dynamic Pricing Options Container -->
                     <div id="dsf-pricing-options-container" class="dsf-pricing-options-container">
-                        <!-- Content loaded via AJAX after service selection -->
+                        <!-- Content loaded client-side after service selection -->
                     </div>
 
                     <!-- Price Display -->
@@ -258,6 +263,371 @@ class Form {
                 </div>
             </form>
         </div>
+
+        <!-- Inline JavaScript for Form Handling -->
+        <script type="text/javascript">
+        (function() {
+            'use strict';
+
+            // Wait for DOM ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initForm);
+            } else {
+                initForm();
+            }
+
+            function initForm() {
+                // Handle service selection change
+                var serviceSelect = document.getElementById('dsf-service-select');
+                if (serviceSelect) {
+                    serviceSelect.addEventListener('change', function() {
+                        var serviceId = parseInt(this.value);
+                        
+                        if (!serviceId) {
+                            document.getElementById('dsf-pricing-options-container').innerHTML = '';
+                            resetPriceDisplay();
+                            return;
+                        }
+
+                        // Find service in embedded data
+                        var service = null;
+                        if (typeof DSF_SERVICES_DATA !== 'undefined') {
+                            for (var i = 0; i < DSF_SERVICES_DATA.length; i++) {
+                                if (DSF_SERVICES_DATA[i].id === serviceId) {
+                                    service = DSF_SERVICES_DATA[i];
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (!service) {
+                            console.error('Service not found in embedded data');
+                            return;
+                        }
+
+                        // Render pricing options based on pricing model
+                        renderPricingOptions(service);
+                    });
+                }
+
+                // Handle location selection (for state_based)
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.id === 'dsf-location') {
+                        updatePriceDisplay();
+                    }
+                });
+
+                // Handle package selection (for state_based with packages)
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.name === 'package_id') {
+                        updatePriceDisplay();
+                    }
+                });
+
+                // Handle portal selection (for portal_based)
+                document.addEventListener('change', function(e) {
+                    if (e.target && e.target.name === 'portal_ids[]') {
+                        updatePriceDisplay();
+                    }
+                });
+
+                // Handle calculator amount input
+                document.addEventListener('input', function(e) {
+                    if (e.target && e.target.id === 'dsf-calculator-amount') {
+                        updatePriceDisplay();
+                    }
+                });
+            }
+
+            /**
+             * Render pricing options based on service pricing model
+             */
+            function renderPricingOptions(service) {
+                var html = '';
+
+                switch (service.pricing_model) {
+                    case 'state_based':
+                        html = renderStateBased(service);
+                        break;
+                    case 'portal_based':
+                        html = renderPortalBased(service);
+                        break;
+                    case 'fixed_price':
+                        html = renderFixedPrice(service);
+                        break;
+                    case 'calculator':
+                        html = renderCalculator(service);
+                        break;
+                }
+
+                document.getElementById('dsf-pricing-options-container').innerHTML = html;
+                resetPriceDisplay();
+            }
+
+            /**
+             * Render state-based pricing HTML
+             */
+            function renderStateBased(service) {
+                var html = '<div class="dsf-field-group">';
+                html += '<label for="dsf-location">Location / State <span class="dsf-required">*</span></label>';
+                html += '<select id="dsf-location" name="location_id" required>';
+                html += '<option value="">-- Select Location --</option>';
+                
+                if (service.locations && service.locations.length > 0) {
+                    for (var i = 0; i < service.locations.length; i++) {
+                        var location = service.locations[i];
+                        html += '<option value="' + escapeHtml(location.location_id) + '" ';
+                        html += 'data-location-name="' + escapeHtml(location.location_name) + '" ';
+                        html += 'data-standard-price="' + escapeHtml(location.standard_price || '') + '" ';
+                        html += 'data-premium-price="' + escapeHtml(location.premium_price || '') + '" ';
+                        html += 'data-is-universal="' + escapeHtml(location.is_universal || 0) + '">';
+                        html += escapeHtml(location.location_name);
+                        html += '</option>';
+                    }
+                }
+                
+                html += '</select></div>';
+
+                // Add packages if service has them
+                if (service.has_packages && service.packages && service.packages.length > 0) {
+                    html += '<div class="dsf-field-group">';
+                    html += '<label>Package / Plan <span class="dsf-required">*</span></label>';
+                    html += '<div class="dsf-packages-container">';
+                    
+                    for (var j = 0; j < service.packages.length; j++) {
+                        var pkg = service.packages[j];
+                        html += '<label class="dsf-package-item">';
+                        html += '<input type="radio" name="package_id" ';
+                        html += 'value="' + escapeHtml(pkg.package_type_id) + '" ';
+                        html += 'data-price="' + escapeHtml(pkg.price || '') + '" ';
+                        html += 'data-package-name="' + escapeHtml(pkg.package_type_name) + '" ';
+                        html += 'required>';
+                        html += '<span class="dsf-package-name">' + escapeHtml(pkg.package_type_name) + '</span>';
+                        
+                        if (pkg.price) {
+                            html += '<span class="dsf-package-price">$' + parseFloat(pkg.price).toFixed(2) + '</span>';
+                        }
+                        
+                        html += '</label>';
+                    }
+                    
+                    html += '</div></div>';
+                }
+
+                return html;
+            }
+
+            /**
+             * Render portal-based pricing HTML
+             */
+            function renderPortalBased(service) {
+                var html = '<div class="dsf-field-group">';
+                html += '<label>Select Portals (Multiple Selection) <span class="dsf-required">*</span></label>';
+                html += '<div class="dsf-portals-container">';
+                
+                if (service.portals && service.portals.length > 0) {
+                    for (var i = 0; i < service.portals.length; i++) {
+                        var portal = service.portals[i];
+                        html += '<label class="dsf-portal-item">';
+                        html += '<input type="checkbox" name="portal_ids[]" ';
+                        html += 'value="' + escapeHtml(portal.id) + '" ';
+                        html += 'data-price="' + escapeHtml(portal.price || '') + '" ';
+                        html += 'data-portal-name="' + escapeHtml(portal.portal_name) + '">';
+                        html += '<span class="dsf-portal-name">' + escapeHtml(portal.portal_name) + '</span>';
+                        
+                        if (portal.price) {
+                            html += '<span class="dsf-portal-price">$' + parseFloat(portal.price).toFixed(2) + '</span>';
+                        }
+                        
+                        html += '</label>';
+                    }
+                }
+                
+                html += '</div></div>';
+                return html;
+            }
+
+            /**
+             * Render fixed price HTML
+             */
+            function renderFixedPrice(service) {
+                var fixedPrice = service.fixed_price || 0;
+                var html = '<div class="dsf-field-group dsf-fixed-price-display">';
+                html += '<p class="dsf-fixed-price-notice">This service has a fixed price.</p>';
+                html += '<input type="hidden" name="fixed_price" value="' + escapeHtml(fixedPrice) + '">';
+                html += '</div>';
+                
+                // Update price display immediately
+                setTimeout(function() {
+                    document.getElementById('dsf-price-label').textContent = service.name;
+                    document.getElementById('dsf-price-value').textContent = '$' + parseFloat(fixedPrice).toFixed(2);
+                    document.getElementById('dsf-total-price-display').textContent = '$' + parseFloat(fixedPrice).toFixed(2);
+                }, 100);
+                
+                return html;
+            }
+
+            /**
+             * Render calculator pricing HTML
+             */
+            function renderCalculator(service) {
+                var html = '<div class="dsf-field-group">';
+                html += '<label for="dsf-calculator-amount">Enter Amount <span class="dsf-required">*</span></label>';
+                html += '<input type="number" id="dsf-calculator-amount" name="calculator_amount" ';
+                html += 'step="0.01" min="0" required placeholder="e.g., 1000000">';
+                html += '</div>';
+                
+                html += '<div class="dsf-calculator-tiers">';
+                html += '<h4>Pricing Tiers:</h4>';
+                html += '<ul>';
+                html += '<li>$350,000 - $500,000: <strong>$900.00</strong></li>';
+                html += '<li>$500,000 - $2,000,000: <strong>$1,500.00</strong></li>';
+                html += '<li>$2,000,000+: <strong>1% of total amount</strong></li>';
+                html += '</ul></div>';
+                
+                return html;
+            }
+
+            /**
+             * Update price display based on selected options
+             */
+            function updatePriceDisplay() {
+                var serviceSelect = document.getElementById('dsf-service-select');
+                if (!serviceSelect || !serviceSelect.value) {
+                    resetPriceDisplay();
+                    return;
+                }
+
+                var serviceId = parseInt(serviceSelect.value);
+                var service = null;
+                
+                if (typeof DSF_SERVICES_DATA !== 'undefined') {
+                    for (var i = 0; i < DSF_SERVICES_DATA.length; i++) {
+                        if (DSF_SERVICES_DATA[i].id === serviceId) {
+                            service = DSF_SERVICES_DATA[i];
+                            break;
+                        }
+                    }
+                }
+
+                if (!service) {
+                    resetPriceDisplay();
+                    return;
+                }
+
+                var totalPrice = 0;
+                var priceLabel = service.name;
+
+                switch (service.pricing_model) {
+                    case 'state_based':
+                        totalPrice = calculateStateBased(service);
+                        break;
+                    case 'portal_based':
+                        totalPrice = calculatePortalBased();
+                        break;
+                    case 'fixed_price':
+                        totalPrice = parseFloat(service.fixed_price || 0);
+                        break;
+                    case 'calculator':
+                        totalPrice = calculateTiered();
+                        break;
+                }
+
+                document.getElementById('dsf-price-label').textContent = priceLabel;
+                document.getElementById('dsf-price-value').textContent = '$' + totalPrice.toFixed(2);
+                document.getElementById('dsf-total-price-display').textContent = '$' + totalPrice.toFixed(2);
+            }
+
+            /**
+             * Calculate price for state-based pricing model
+             */
+            function calculateStateBased(service) {
+                var total = 0;
+
+                // Get location price
+                var locationSelect = document.getElementById('dsf-location');
+                if (locationSelect && locationSelect.value) {
+                    var selectedOption = locationSelect.options[locationSelect.selectedIndex];
+                    var standardPrice = parseFloat(selectedOption.getAttribute('data-standard-price') || 0);
+                    total += standardPrice;
+                }
+
+                // Get package price if applicable
+                if (service.has_packages) {
+                    var packageRadio = document.querySelector('input[name="package_id"]:checked');
+                    if (packageRadio) {
+                        var packagePrice = parseFloat(packageRadio.getAttribute('data-price') || 0);
+                        total += packagePrice;
+                    }
+                }
+
+                return total;
+            }
+
+            /**
+             * Calculate price for portal-based pricing model
+             */
+            function calculatePortalBased() {
+                var total = 0;
+                var portalCheckboxes = document.querySelectorAll('input[name="portal_ids[]"]:checked');
+                
+                for (var i = 0; i < portalCheckboxes.length; i++) {
+                    var price = parseFloat(portalCheckboxes[i].getAttribute('data-price') || 0);
+                    total += price;
+                }
+
+                return total;
+            }
+
+            /**
+             * Calculate price for calculator pricing model
+             */
+            function calculateTiered() {
+                var amountInput = document.getElementById('dsf-calculator-amount');
+                if (!amountInput || !amountInput.value) {
+                    return 0;
+                }
+
+                var amount = parseFloat(amountInput.value);
+                
+                if (amount >= 350000 && amount <= 500000) {
+                    return 900.00;
+                } else if (amount > 500000 && amount <= 2000000) {
+                    return 1500.00;
+                } else if (amount > 2000000) {
+                    return amount * 0.01; // 1% of total amount
+                }
+
+                return 0;
+            }
+
+            /**
+             * Reset price display to default
+             */
+            function resetPriceDisplay() {
+                document.getElementById('dsf-price-label').textContent = '--';
+                document.getElementById('dsf-price-value').textContent = '--';
+                document.getElementById('dsf-total-price-display').textContent = '$0.00';
+            }
+
+            /**
+             * Escape HTML to prevent XSS
+             */
+            function escapeHtml(text) {
+                if (text === null || text === undefined) {
+                    return '';
+                }
+                var map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+        })();
+        </script>
         <?php
         
         return ob_get_clean();
@@ -299,41 +669,28 @@ class Form {
     }
 
     /**
-     * Render service dropdown options
+     * Render service dropdown options from filtered data
+     * 
+     * @param array $services_data Pre-filtered services data
      */
-    private function render_service_dropdown_options() {
-        $services = Service::get_all();
-        
-        if (empty($services)) {
+    private function render_filtered_service_options($services_data) {
+        if (empty($services_data)) {
             return;
         }
-
-        $grouped = [];
-        foreach ($services as $service) {
-            if (!isset($grouped[$service['type']])) {
-                $grouped[$service['type']] = [];
-            }
-            $grouped[$service['type']][] = $service;
-        }
-
-        foreach ($grouped as $type => $type_services) {
-            echo '<optgroup label="' . esc_attr($type) . '">';
-            foreach ($type_services as $service) {
-                // Create a slug from the service name for URL matching
-                $slug = sanitize_title($service['name']);
-                echo '<option value="' . esc_attr($service['id']) . '" 
-                    data-slug="' . esc_attr($slug) . '"
-                    data-pricing-model="' . esc_attr($service['pricing_model']) . '"
-                    data-has-packages="' . esc_attr($service['has_packages'] ? '1' : '0') . '">';
-                echo esc_html($service['category'] . ' - ' . $service['name']);
-                echo '</option>';
-            }
-            echo '</optgroup>';
+        foreach ($services_data as $service) {
+            $slug = sanitize_title($service['name']);
+            echo '<option value="' . esc_attr($service['id']) . '" ';
+            echo 'data-slug="' . esc_attr($slug) . '" ';
+            echo 'data-pricing-model="' . esc_attr($service['pricing_model']) . '" ';
+            echo 'data-has-packages="' . esc_attr($service['has_packages'] ? '1' : '0') . '">';
+            echo esc_html($service['name']);
+            echo '</option>';
         }
     }
 
     /**
      * Get pricing options for a service
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param int $service_id Service ID
      * @return array
@@ -360,6 +717,7 @@ class Form {
 
     /**
      * Render pricing options based on pricing model
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param Service $service Service object
      */
@@ -384,6 +742,7 @@ class Form {
 
     /**
      * Render state-based pricing options
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param Service $service
      */
@@ -438,6 +797,7 @@ class Form {
 
     /**
      * Render portal-based pricing options
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param Service $service
      */
@@ -466,6 +826,7 @@ class Form {
 
     /**
      * Render fixed price
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param Service $service
      */
@@ -483,6 +844,7 @@ class Form {
 
     /**
      * Render calculator pricing
+     * (Kept for backward compatibility, but no longer used in frontend)
      *
      * @param Service $service
      */
