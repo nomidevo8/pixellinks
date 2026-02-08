@@ -528,16 +528,16 @@ INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packag
 (50, 'federal', 'other-services', 'federal-third-party-bidding-setup', 'portal_based', 0, 'Federal & Third-Party Bidding Setup - Select portals for registration', 1, NOW(), NOW());
 
 -- Service 51: duns-number-registration (fixed_price)
-INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
-(51, 'federal', 'other-services', 'duns-number-registration', 'fixed_price', 0, 'D-U-N-S Number Registration - Fixed pricing', 1, NOW(), NOW());
+INSERT INTO wp_dsf_services (id, type, category, name, fixed_price, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
+(51, 'federal', 'other-services', 'duns-number-registration', 300.00, 'fixed_price', 0, 'D-U-N-S Number Registration - Fixed pricing', 1, NOW(), NOW());
 
 -- Service 52: liability-insurance-for-business (fixed_price)
-INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
-(52, 'federal', 'other-services', 'liability-insurance-for-business', 'fixed_price', 0, 'Liability Insurance for Business - Fixed pricing', 1, NOW(), NOW());
+INSERT INTO wp_dsf_services (id, type, category, name, fixed_price, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
+(52, 'federal', 'other-services', 'liability-insurance-for-business', 1700.00, 'fixed_price', 0, 'Liability Insurance for Business - Fixed pricing', 1, NOW(), NOW());
 
 -- Service 53: notary-services (fixed_price)
-INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
-(53, 'federal', 'other-services', 'notary-services', 'fixed_price', 0, 'Notary Services - Fixed pricing', 1, NOW(), NOW());
+INSERT INTO wp_dsf_services (id, type, category, name, fixed_price, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
+(53, 'federal', 'other-services', 'notary-services', 150.00, 'fixed_price', 0, 'Notary Services - Fixed pricing', 1, NOW(), NOW());
 
 -- Service 54: bonds (calculator)
 INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packages, description, enabled, created_at, updated_at) VALUES
