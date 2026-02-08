@@ -310,6 +310,9 @@ class Form {
                     });
                 }
 
+                // Auto-select service from URL parameters
+                autoLoadServiceFromUrl();
+
                 // Handle location selection (for state_based)
                 document.addEventListener('change', function(e) {
                     if (e.target && e.target.id === 'dsf-location') {
@@ -626,6 +629,100 @@ class Form {
                 };
                 return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
             }
+
+            /**
+             * Get URL parameter by name
+             */
+            function getUrlParameter(param) {
+                var urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(param);
+            }
+
+            /**
+             * Auto-load service from URL parameters
+             */
+            function autoLoadServiceFromUrl() {
+                var serviceName = getUrlParameter('service_name');
+                var packageName = getUrlParameter('pkg');
+                
+                if (!serviceName) {
+                    return;
+                }
+                
+                // Find and select service by name
+                findAndSelectService(serviceName, packageName);
+            }
+
+            /**
+             * Find service matching name and select it
+             */
+            function findAndSelectService(serviceName, packageName) {
+                var serviceSelect = document.getElementById('dsf-service-select');
+                if (!serviceSelect) {
+                    return;
+                }
+                
+                var selectedServiceId = null;
+                var options = serviceSelect.options;
+                
+                // Search through all options to find matching service
+                for (var i = 0; i < options.length; i++) {
+                    var option = options[i];
+                    var optionText = option.text.toLowerCase();
+                    var searchName = serviceName.toLowerCase().replace(/-/g, ' ');
+                    
+                    // Check if option text contains the service name
+                    if (optionText.indexOf(searchName) !== -1) {
+                        selectedServiceId = option.value;
+                        break;
+                    }
+                }
+                
+                // If service found, select it and load pricing
+                if (selectedServiceId) {
+                    serviceSelect.value = selectedServiceId;
+                    
+                    // Trigger change event to load pricing options
+                    if (serviceSelect.dispatchEvent) {
+                        var event = new Event('change', { bubbles: true });
+                        serviceSelect.dispatchEvent(event);
+                    } else {
+                        // IE fallback
+                        serviceSelect.fireEvent('onchange');
+                    }
+                    
+                    // If package name is provided, auto-select it after pricing loads
+                    if (packageName) {
+                        setTimeout(function() {
+                            autoSelectPackage(packageName);
+                        }, 500);
+                    }
+                }
+            }
+
+            /**
+             * Auto-select package by name after pricing loads
+             */
+            function autoSelectPackage(packageName) {
+                var packageInputs = document.querySelectorAll('[name="package_id"]');
+                var searchName = packageName.toLowerCase();
+                
+                for (var i = 0; i < packageInputs.length; i++) {
+                    var input = packageInputs[i];
+                    var packageNameAttr = input.getAttribute('data-package-name');
+                    
+                    if (packageNameAttr && packageNameAttr.toLowerCase().indexOf(searchName) !== -1) {
+                        input.checked = true;
+                        
+                        // Trigger change event to update price
+                        if (input.dispatchEvent) {
+                            var event = new Event('change', { bubbles: true });
+                            input.dispatchEvent(event);
+                        }
+                        break;
+                    }
+                }
+            }
         })();
         </script>
         <?php
@@ -677,6 +774,7 @@ class Form {
         if (empty($services_data)) {
             return;
         }
+
         foreach ($services_data as $service) {
             $slug = sanitize_title($service['name']);
             echo '<option value="' . esc_attr($service['id']) . '" ';

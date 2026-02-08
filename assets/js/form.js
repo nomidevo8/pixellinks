@@ -1,6 +1,7 @@
 /**
  * Dynamic Services Form - Frontend JavaScript
  * 2-Step Workflow: Service + Pricing -> Contact Info
+ * Note: Service selection and pricing are now handled inline in Form.php
  */
 
 (function($) {
@@ -9,8 +10,6 @@
     const DSFForm = {
         currentStep: 1,
         totalSteps: 2,
-        formData: {},
-        selectedService: null,
 
         /**
          * Initialize the form
@@ -18,7 +17,6 @@
         init: function() {
             this.cacheElements();
             this.bindEvents();
-            this.autoLoadServiceFromUrl();
         },
 
         /**
@@ -26,11 +24,6 @@
          */
         cacheElements: function() {
             this.$form = $('#dsf-form');
-            this.$serviceSelect = $('#dsf-service-select');
-            this.$locationSelect = $('#dsf-location');
-            this.$packageRadios = $('[name="package_id"]');
-            this.$portalCheckboxes = $('[name="portal_ids[]"]');
-            this.$calculatorAmount = $('#dsf-calculator-amount');
         },
 
         /**
@@ -38,17 +31,6 @@
          */
         bindEvents: function() {
             const self = this;
-
-            // Service selection from dropdown
-            this.$serviceSelect.on('change', function() {
-                const serviceId = $(this).val();
-                if (serviceId) {
-                    self.loadPricingOptions(serviceId);
-                } else {
-                    $('#dsf-pricing-options-container').empty();
-                    self.updatePriceDisplay(0);
-                }
-            });
 
             // Next/Previous button clicks
             $(document).on('click', '.dsf-btn-next', function(e) {
@@ -67,42 +49,6 @@
             this.$form.on('submit', function(e) {
                 e.preventDefault();
                 self.submitForm();
-            });
-
-            // Real-time price calculation
-            $(document).on('change', '#dsf-location, [name="package_id"], [name="portal_ids[]"], #dsf-calculator-amount', function() {
-                self.calculatePrice();
-            });
-        },
-
-        /**
-         * Load pricing options via AJAX
-         */
-        loadPricingOptions: function(serviceId) {
-            const self = this;
-            const data = {
-                action: 'dsf_get_pricing_options',
-                nonce: dsfFrontend.nonce,
-                service_id: serviceId,
-            };
-
-            $.ajax({
-                url: dsfFrontend.ajaxUrl,
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    if (response.success) {
-                        $('#dsf-pricing-options-container').html(response.data.html);
-                        self.cacheElements();
-                        self.bindEvents();
-                        self.calculatePrice();
-                    } else {
-                        alert('Error loading pricing options');
-                    }
-                },
-                error: function() {
-                    alert('Error loading pricing options');
-                },
             });
         },
 
@@ -124,7 +70,7 @@
 
             switch (step) {
                 case 1: // Service + Pricing
-                    if (!this.$serviceSelect.val()) {
+                    if (!$('#dsf-service-select').val()) {
                         alert(dsfFrontend.validateMessages?.selectService || 'Please select a service');
                         isValid = false;
                     } else if (!this.validatePricingStep()) {
@@ -150,11 +96,11 @@
 
             switch (pricingModel) {
                 case 'state_based':
-                    if (!this.$locationSelect.val()) {
+                    if (!$('#dsf-location').val()) {
                         alert('Please select a location');
                         return false;
                     }
-                    if (this.hasPackages() && !$('[name="package_id"]:checked').val()) {
+                    if ($('[name="package_id"]').length > 0 && !$('[name="package_id"]:checked').val()) {
                         alert('Please select a package');
                         return false;
                     }
@@ -168,7 +114,7 @@
                     break;
 
                 case 'calculator':
-                    if (!this.$calculatorAmount.val() || this.$calculatorAmount.val() <= 0) {
+                    if (!$('#dsf-calculator-amount').val() || $('#dsf-calculator-amount').val() <= 0) {
                         alert('Please enter a valid amount');
                         return false;
                     }
@@ -243,52 +189,6 @@
         },
 
         /**
-         * Calculate and display total price
-         */
-        calculatePrice: function() {
-            const self = this;
-            const serviceId = this.$serviceSelect.val();
-
-            if (!serviceId) {
-                this.updatePriceDisplay(0);
-                return;
-            }
-
-            const data = {
-                action: 'dsf_calculate_price',
-                nonce: dsfFrontend.nonce,
-                service_id: serviceId,
-                location_id: this.$locationSelect.val() || 0,
-                package_id: $('[name="package_id"]:checked').val() || 0,
-                portal_ids: this.getSelectedPortals(),
-                calculator_amount: this.$calculatorAmount.val() || 0,
-            };
-
-            $.ajax({
-                url: dsfFrontend.ajaxUrl,
-                type: 'POST',
-                data: data,
-                success: function(response) {
-                    if (response.success) {
-                        const totalPrice = response.data.total_price;
-                        const priceLabel = response.data.price_label || 'Service Fee';
-                        self.updatePriceDisplay(totalPrice, priceLabel);
-                    }
-                },
-            });
-        },
-
-        /**
-         * Update price display in the price table
-         */
-        updatePriceDisplay: function(totalPrice, label = 'Service Fee') {
-            const formattedPrice = '$' + parseFloat(totalPrice).toFixed(2);
-            $('#dsf-price-label').text(label);
-            $('#dsf-price-value').text(formattedPrice);
-            $('#dsf-total-price-display').text(formattedPrice);
-        },
-
-        /**
          * Get selected portals
          */
         getSelectedPortals: function() {
@@ -302,11 +202,11 @@
          */
         collectFormData: function() {
             return {
-                service_id: this.$serviceSelect.val(),
-                location_id: this.$locationSelect.val() || null,
+                service_id: $('#dsf-service-select').val(),
+                location_id: $('#dsf-location').val() || null,
                 package_id: $('[name="package_id"]:checked').val() || null,
                 portal_ids: this.getSelectedPortals(),
-                calculator_amount: this.$calculatorAmount.val() || null,
+                calculator_amount: $('#dsf-calculator-amount').val() || null,
                 first_name: $('#dsf-first-name').val(),
                 last_name: $('#dsf-last-name').val(),
                 business_name: $('#dsf-business-name').val(),
@@ -358,118 +258,16 @@
          * Get pricing model from visible options
          */
         getPricingModel: function() {
-            if (this.$locationSelect.length && this.$locationSelect.is(':visible')) {
+            if ($('#dsf-location').length && $('#dsf-location').is(':visible')) {
                 return 'state_based';
             }
-            if (this.$portalCheckboxes.length && this.$portalCheckboxes.is(':visible')) {
+            if ($('[name="portal_ids[]"]').length && $('[name="portal_ids[]"]').is(':visible')) {
                 return 'portal_based';
             }
-            if (this.$calculatorAmount.length && this.$calculatorAmount.is(':visible')) {
+            if ($('#dsf-calculator-amount').length && $('#dsf-calculator-amount').is(':visible')) {
                 return 'calculator';
             }
             return 'fixed_price';
-        },
-
-        /**
-         * Check if service has packages
-         */
-        hasPackages: function() {
-            return $('[name="package_id"]').length > 0;
-        },
-
-        /**
-         * Get URL parameter by name
-         */
-        getUrlParameter: function(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
-        },
-
-        /**
-         * Auto-load service from URL parameters
-         * Handles: service_type, service_category, service_name, pkg
-         */
-        autoLoadServiceFromUrl: function() {
-            const self = this;
-            
-            // Get parameters from URL
-            const serviceType = this.getUrlParameter('service_type');
-            const serviceCategory = this.getUrlParameter('service_category');
-            const serviceName = this.getUrlParameter('service_name');
-            const packageName = this.getUrlParameter('pkg');
-            
-            // Type and Category are required to find service
-            if (!serviceType || !serviceCategory) {
-                return;
-            }
-            
-            // Find service by type, category, and optionally name
-            this.findAndSelectService(serviceType, serviceCategory, serviceName, packageName);
-        },
-
-        /**
-         * Find service matching type/category/name and select it
-         */
-        findAndSelectService: function(type, category, name, packageName) {
-            const self = this;
-            
-            // Get all options and find matching service
-            let selectedServiceId = null;
-            
-            this.$serviceSelect.find('option').each(function() {
-                const $option = $(this);
-                const optionText = $option.text();
-                
-                // Check if option text matches the category pattern
-                // Text format is "Category - Name"
-                if (optionText.includes(category)) {
-                    // If name is not provided, select first match of type/category
-                    if (!name) {
-                        selectedServiceId = $option.val();
-                        return false; // Break loop
-                    }
-                    
-                    // If name is provided, match exact name in the option
-                    if (optionText.includes(name) || optionText.toLowerCase().includes(name.toLowerCase())) {
-                        selectedServiceId = $option.val();
-                        return false; // Break loop
-                    }
-                }
-            });
-            
-            // If service found, select it and load pricing
-            if (selectedServiceId) {
-                this.$serviceSelect.val(selectedServiceId);
-                
-                // Load pricing options via AJAX
-                setTimeout(function() {
-                    self.loadPricingOptions(selectedServiceId);
-                    
-                    // If package name is provided, auto-select it after pricing loads
-                    if (packageName) {
-                        setTimeout(function() {
-                            self.autoSelectPackage(packageName);
-                        }, 500);
-                    }
-                }, 100);
-            }
-        },
-
-        /**
-         * Auto-select package by name after pricing loads
-         */
-        autoSelectPackage: function(packageName) {
-            // Find and select the package radio/checkbox matching the name
-            $('[name="package_id"]').each(function() {
-                const $input = $(this);
-                const $label = $input.closest('.dsf-package-card, .dsf-package-option').find('label, .dsf-package-name, .dsf-label-text');
-                const labelText = $label.text().toLowerCase();
-                
-                if (labelText.includes(packageName.toLowerCase())) {
-                    $input.prop('checked', true).trigger('change');
-                    return false; // Break loop
-                }
-            });
         },
     };
 
@@ -479,4 +277,3 @@
     });
 
 })(jQuery);
-

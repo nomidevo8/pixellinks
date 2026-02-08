@@ -26,7 +26,8 @@ if (!defined('ABSPATH')) {
 define('DSF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DSF_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DSF_PLUGIN_FILE', __FILE__);
-define('DSF_PLUGIN_VERSION', '1.0.0');
+// define('DSF_PLUGIN_VERSION', '1.0.0');
+define('DSF_PLUGIN_VERSION', time());
 define('DSF_DB_VERSION', '1.0.0');
 
 // Autoloader for plugin classes
