@@ -86,7 +86,14 @@ class Portal {
         global $wpdb;
         
         $table = Database::get_table('portals');
-        return $wpdb->get_results("SELECT * FROM {$table} ORDER BY service_id, portal_name", ARRAY_A);
+        $services_table = Database::get_table('services');
+        // Join with services to include the service name for easier display/search in admin
+        $sql = "SELECT p.*, s.name AS service_name
+                FROM {$table} p
+                LEFT JOIN {$services_table} s ON p.service_id = s.id
+                ORDER BY s.name, p.portal_name";
+
+        return $wpdb->get_results($sql, ARRAY_A);
     }
 
     /**

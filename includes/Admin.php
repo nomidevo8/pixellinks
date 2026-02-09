@@ -39,6 +39,168 @@ class Admin {
     }
 
     /**
+     * Get pagination parameters
+     *
+     * @return array Array with 'page', 'search', 'per_page'
+     */
+    private function get_pagination_params() {
+        $page = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+        $search = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+        $per_page = 20; // Items per page
+        
+        return [
+            'page' => $page,
+            'search' => $search,
+            'per_page' => $per_page,
+        ];
+    }
+
+    /**
+     * Filter array by search term
+     *
+     * @param array $items Items to filter
+     * @param string $search Search term
+     * @param array $search_fields Fields to search in
+     * @return array Filtered items
+     */
+    private function filter_by_search($items, $search, $search_fields = []) {
+        if (empty($search)) {
+            return $items;
+        }
+
+        if (empty($items) || !is_array($items)) {
+            return $items;
+        }
+
+        // If no explicit fields provided, search all top-level keys of the first item
+        $first = reset($items);
+        if (empty($search_fields)) {
+            if (is_array($first)) {
+                $search_fields = array_keys($first);
+            } else {
+                $search_fields = [];
+            }
+        }
+
+        $search_lower = strtolower($search);
+        return array_filter($items, function($item) use ($search_lower, $search_fields) {
+            foreach ($search_fields as $field) {
+                if (!isset($item[$field])) {
+                    continue;
+                }
+
+                $value = $item[$field];
+                if (is_array($value) || is_object($value)) {
+                    $value = json_encode($value);
+                }
+
+                if (!is_scalar($value)) {
+                    continue;
+                }
+
+                if (stripos(strtolower((string) $value), $search_lower) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    /**
+     * Paginate array
+     *
+     * @param array $items Items to paginate
+     * @param int $page Current page
+     * @param int $per_page Items per page
+     * @return array ['items' => paginated items, 'total' => total count, 'pages' => total pages]
+     */
+    private function paginate_array($items, $page = 1, $per_page = 20) {
+        $total = count($items);
+        $pages = ceil($total / $per_page);
+        $page = max(1, min($page, $pages)); // Ensure page is within bounds
+        
+        $offset = ($page - 1) * $per_page;
+        $paginated = array_slice($items, $offset, $per_page);
+        
+        return [
+            'items' => $paginated,
+            'total' => $total,
+            'pages' => $pages,
+            'current_page' => $page,
+            'per_page' => $per_page,
+        ];
+    }
+
+    /**
+     * Render search bar
+     *
+     * @param string $current_search Current search term
+     */
+    private function render_search_bar($current_search = '') {
+        ?>
+        <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+            <form method="get" style="display: flex; gap: 10px; align-items: center; flex: 1;">
+                <input type="hidden" name="page" value="<?php echo esc_attr($_GET['page'] ?? ''); ?>">
+                <input type="text" name="s" value="<?php echo esc_attr($current_search); ?>" 
+                       placeholder="<?php esc_attr_e('Search...', 'dynamic-services-form'); ?>" 
+                       style="padding: 8px; border: 1px solid #ccc; border-radius: 3px; flex: 1;">
+                <button type="submit" class="button"><?php esc_html_e('Search', 'dynamic-services-form'); ?></button>
+                <?php if (!empty($current_search)) : ?>
+                    <a href="<?php echo esc_url( remove_query_arg('s', add_query_arg('page', $_GET['page'] ?? '')) ); ?>" class="button">
+                        <?php esc_html_e('Clear', 'dynamic-services-form'); ?>
+                    </a>
+                <?php endif; ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render pagination controls
+     *
+     * @param int $current_page Current page
+     * @param int $total_pages Total pages
+     * @param string $search Current search term
+     */
+    private function render_pagination_controls($current_page, $total_pages, $search = '') {
+        if ($total_pages <= 1) {
+            return;
+        }
+
+        $page_param = $_GET['page'] ?? '';
+        $query_args = ['page' => $page_param];
+        if (!empty($search)) {
+            $query_args['s'] = $search;
+        }
+
+        ?>
+        <div style="margin-top: 20px; display: flex; gap: 10px; align-items: center; justify-content: center;">
+            <?php if ($current_page > 1) : ?>
+                <a href="<?php echo esc_url(add_query_arg(array_merge($query_args, ['paged' => 1]))); ?>" class="button">
+                    « <?php esc_html_e('First', 'dynamic-services-form'); ?>
+                </a>
+                <a href="<?php echo esc_url(add_query_arg(array_merge($query_args, ['paged' => $current_page - 1]))); ?>" class="button">
+                    ‹ <?php esc_html_e('Previous', 'dynamic-services-form'); ?>
+                </a>
+            <?php endif; ?>
+
+            <span style="padding: 8px 12px; background: #f1f1f1; border-radius: 3px;">
+                <?php printf(esc_html__('Page %d of %d', 'dynamic-services-form'), $current_page, $total_pages); ?>
+            </span>
+
+            <?php if ($current_page < $total_pages) : ?>
+                <a href="<?php echo esc_url(add_query_arg(array_merge($query_args, ['paged' => $current_page + 1]))); ?>" class="button">
+                    <?php esc_html_e('Next', 'dynamic-services-form'); ?> ›
+                </a>
+                <a href="<?php echo esc_url(add_query_arg(array_merge($query_args, ['paged' => $total_pages]))); ?>" class="button">
+                    <?php esc_html_e('Last', 'dynamic-services-form'); ?> »
+                </a>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
      * Register admin menu
      */
     public function register_menu() {
@@ -194,7 +356,20 @@ class Admin {
      * Show services list
      */
     private function show_services_list() {
-        $services = Service::get_all();
+        $all_services = Service::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search
+        $services = $this->filter_by_search(
+            $all_services,
+            $params['search'],
+            ['type', 'category', 'name', 'pricing_model']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($services, $params['page'], $params['per_page']);
+        $services = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -203,6 +378,12 @@ class Admin {
                     <?php esc_html_e('Add New', 'dynamic-services-form'); ?>
                 </a>
             </h1>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d service(s)', 'dynamic-services-form'), $pagination['total']); ?>
+            </p>
             
             <table class="wp-list-table widefat fixed striped">
                 <thead>
@@ -220,7 +401,7 @@ class Admin {
                 <tbody>
                     <?php if (empty($services)) : ?>
                         <tr>
-                            <td colspan="7"><?php esc_html_e('No services found.', 'dynamic-services-form'); ?></td>
+                            <td colspan="8"><?php esc_html_e('No services found.', 'dynamic-services-form'); ?></td>
                         </tr>
                     <?php else : ?>
                         <?php foreach ($services as $service) : ?>
@@ -228,14 +409,14 @@ class Admin {
                                 <td><?php echo esc_html($service['type']); ?></td>
                                 <td><?php echo esc_html($service['category']); ?></td>
                                 <td><?php echo esc_html($service['name']); ?></td>
-                                    <td>
-                                        <?php if ($service['pricing_model'] === 'fixed_price' && !empty($service['fixed_price'])) : ?>
-                                            <?php echo '$' . number_format((float) $service['fixed_price'], 2); ?>
-                                        <?php else : ?>
-                                            --
-                                        <?php endif; ?>
-                                    </td>
-                                    <td><?php echo esc_html($service['pricing_model']); ?></td>
+                                <td>
+                                    <?php if ($service['pricing_model'] === 'fixed_price' && !empty($service['fixed_price'])) : ?>
+                                        <?php echo '$' . number_format((float) $service['fixed_price'], 2); ?>
+                                    <?php else : ?>
+                                        --
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo esc_html($service['pricing_model']); ?></td>
                                 <td><?php echo $service['has_packages'] ? esc_html__('Yes', 'dynamic-services-form') : esc_html__('No', 'dynamic-services-form'); ?></td>
                                 <td><?php echo $service['enabled'] ? esc_html__('Enabled', 'dynamic-services-form') : esc_html__('Disabled', 'dynamic-services-form'); ?></td>
                                 <td>
@@ -256,6 +437,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
@@ -645,7 +828,20 @@ class Admin {
      * Show package types list
      */
     private function show_package_types_list() {
-        $package_types = PackageType::get_all();
+        $all_package_types = PackageType::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search
+        $package_types = $this->filter_by_search(
+            $all_package_types,
+            $params['search'],
+            ['package_type_name', 'description']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($package_types, $params['page'], $params['per_page']);
+        $package_types = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -657,6 +853,12 @@ class Admin {
             
             <p class="description" style="margin-bottom: 20px;">
                 <?php esc_html_e('Manage unique package types (Standard, Premium, Enterprise, etc.) that are shared across services. Services can have different prices for the same package type.', 'dynamic-services-form'); ?>
+            </p>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d package type(s)', 'dynamic-services-form'), $pagination['total']); ?>
             </p>
             
             <table class="wp-list-table widefat fixed striped">
@@ -701,6 +903,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
@@ -827,7 +1031,19 @@ class Admin {
      * Show service-package pricing list
      */
     private function show_package_pricing_list() {
-        $pricings = ServicePackagePricing::get_all();
+        $all_pricings = ServicePackagePricing::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search (search across all fields when no specific fields provided)
+        $pricings = $this->filter_by_search(
+            $all_pricings,
+            $params['search']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($pricings, $params['page'], $params['per_page']);
+        $pricings = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -839,6 +1055,12 @@ class Admin {
             
             <p class="description" style="margin-bottom: 20px;">
                 <?php esc_html_e('Set pricing for each service-package combination. Multiple services can have different prices for the same package type.', 'dynamic-services-form'); ?>
+            </p>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d pricing(s)', 'dynamic-services-form'), $pagination['total']); ?>
             </p>
             
             <table class="wp-list-table widefat fixed striped">
@@ -881,6 +1103,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
@@ -1038,7 +1262,20 @@ class Admin {
      * Show locations list
      */
     private function show_locations_list() {
-        $locations = Location::get_all();
+        $all_locations = Location::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search
+        $locations = $this->filter_by_search(
+            $all_locations,
+            $params['search'],
+            ['location_name', 'location_code', 'location_type']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($locations, $params['page'], $params['per_page']);
+        $locations = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -1050,6 +1287,12 @@ class Admin {
             
             <p class="description" style="margin-bottom: 20px;">
                 <?php esc_html_e('Manage unique locations that are shared across services. Services link to these locations with their specific pricing.', 'dynamic-services-form'); ?>
+            </p>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d location(s)', 'dynamic-services-form'), $pagination['total']); ?>
             </p>
             
             <table class="wp-list-table widefat fixed striped">
@@ -1098,6 +1341,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
@@ -1244,7 +1489,19 @@ class Admin {
      * Show service-location pricing list
      */
     private function show_location_pricing_list() {
-        $pricings = ServiceLocationPricing::get_all();
+        $all_pricings = ServiceLocationPricing::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search (search across all fields when no specific fields provided)
+        $pricings = $this->filter_by_search(
+            $all_pricings,
+            $params['search']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($pricings, $params['page'], $params['per_page']);
+        $pricings = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -1256,6 +1513,12 @@ class Admin {
             
             <p class="description" style="margin-bottom: 20px;">
                 <?php esc_html_e('Set pricing for each service in each location. Multiple services can have different prices for the same location. Use Universal Price for services without package tiers.', 'dynamic-services-form'); ?>
+            </p>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d location pricing(s)', 'dynamic-services-form'), $pagination['total']); ?>
             </p>
             
             <table class="wp-list-table widefat fixed striped">
@@ -1312,6 +1575,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
@@ -1529,7 +1794,19 @@ class Admin {
      * Show portals list
      */
     private function show_portals_list() {
-        $portals = Portal::get_all();
+        $all_portals = Portal::get_all();
+        $params = $this->get_pagination_params();
+        
+        // Filter by search (search across all fields when no specific fields provided)
+        $portals = $this->filter_by_search(
+            $all_portals,
+            $params['search']
+        );
+        
+        // Paginate
+        $pagination = $this->paginate_array($portals, $params['page'], $params['per_page']);
+        $portals = $pagination['items'];
+        
         ?>
         <div class="wrap">
             <h1>
@@ -1538,6 +1815,12 @@ class Admin {
                     <?php esc_html_e('Add New', 'dynamic-services-form'); ?>
                 </a>
             </h1>
+            
+            <?php $this->render_search_bar($params['search']); ?>
+            
+            <p style="color: #666; margin-bottom: 15px;">
+                <?php printf(esc_html__('Total: %d portal(s)', 'dynamic-services-form'), $pagination['total']); ?>
+            </p>
             
             <table class="wp-list-table widefat fixed striped">
                 <thead>
@@ -1556,9 +1839,8 @@ class Admin {
                         </tr>
                     <?php else : ?>
                         <?php foreach ($portals as $portal) : ?>
-                            <?php $service = new Service($portal['service_id']); ?>
                             <tr>
-                                <td><?php echo esc_html($service->get('name')); ?></td>
+                                <td><strong><?php echo esc_html($portal['service_name']); ?></strong></td>
                                 <td><?php echo esc_html($portal['portal_name']); ?></td>
                                 <td><?php echo !empty($portal['price']) ? '$' . number_format((float) $portal['price'], 2) : '--'; ?></td>
                                 <td><?php echo $portal['enabled'] ? esc_html__('Enabled', 'dynamic-services-form') : esc_html__('Disabled', 'dynamic-services-form'); ?></td>
@@ -1580,6 +1862,8 @@ class Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+            
+            <?php $this->render_pagination_controls($pagination['current_page'], $pagination['pages'], $params['search']); ?>
         </div>
         <?php
     }
