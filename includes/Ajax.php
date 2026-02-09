@@ -43,6 +43,9 @@ class Ajax {
         
         add_action('wp_ajax_dsf_get_review_summary', [$this, 'get_review_summary']);
         add_action('wp_ajax_nopriv_dsf_get_review_summary', [$this, 'get_review_summary']);
+        
+        add_action('wp_ajax_dsf_get_submission_details', [$this, 'get_submission_details']);
+        
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
     }
 
@@ -734,5 +737,183 @@ class Ajax {
             // $2,000,000+: 1% of total amount
             return $amount * 0.01;
         }
+    }
+
+    /**
+     * Get submission details via AJAX for modal view
+     */
+    public function get_submission_details() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
+        
+        if (!$submission_id) {
+            wp_send_json_error(['message' => 'Invalid submission ID']);
+        }
+
+        global $wpdb;
+        $submission = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                $submission_id
+            ),
+            ARRAY_A
+        );
+
+        if (!$submission) {
+            wp_send_json_error(['message' => 'Submission not found']);
+        }
+
+        $form_data = json_decode($submission['form_data'], true);
+        $service = new Service($submission['service_id']);
+
+        ob_start();
+        ?>
+        <div class="dsf-submission-section">
+            <h3>👤 Customer Information</h3>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">First Name:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['first_name']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Last Name:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['last_name']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Email:</div>
+                <div class="dsf-info-value"><a href="mailto:<?php echo esc_attr($submission['email']); ?>" style="color: #0073aa;"><?php echo esc_html($submission['email']); ?></a></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Phone:</div>
+                <div class="dsf-info-value"><a href="tel:<?php echo esc_attr($submission['phone']); ?>" style="color: #0073aa;"><?php echo esc_html($submission['phone']); ?></a></div>
+            </div>
+        </div>
+
+        <div class="dsf-submission-section">
+            <h3>🏢 Business Information</h3>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Business Name:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['business_name']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Business Address:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['business_address']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">City:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['city']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">State:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['state']); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Zip Code:</div>
+                <div class="dsf-info-value"><?php echo esc_html($submission['zipcode']); ?></div>
+            </div>
+        </div>
+
+        <div class="dsf-submission-section">
+            <h3>🎯 Service Information</h3>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Service Name:</div>
+                <div class="dsf-info-value"><?php echo esc_html($service->get('name')); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Service Type:</div>
+                <div class="dsf-info-value"><?php echo isset($form_data['service_type']) ? esc_html($form_data['service_type']) : '--'; ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Service Category:</div>
+                <div class="dsf-info-value"><?php echo isset($form_data['service_category']) ? esc_html($form_data['service_category']) : '--'; ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Pricing Model:</div>
+                <div class="dsf-info-value"><strong><?php echo isset($form_data['pricing_model']) ? esc_html(ucwords(str_replace('_', ' ', $form_data['pricing_model']))) : '--'; ?></strong></div>
+            </div>
+        </div>
+
+        <?php if (isset($form_data['pricing_model'])) : 
+            switch ($form_data['pricing_model']) {
+                case 'state_based':
+                    ?>
+                    <div class="dsf-submission-section">
+                        <h3>📍 Location & Pricing Details</h3>
+                        <?php if (isset($form_data['location_name'])) : ?>
+                        <div class="dsf-info-row">
+                            <div class="dsf-info-label">Location:</div>
+                            <div class="dsf-info-value"><?php echo esc_html($form_data['location_name']); ?></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php if (isset($form_data['package_name'])) : ?>
+                        <div class="dsf-info-row">
+                            <div class="dsf-info-label">Package:</div>
+                            <div class="dsf-info-value"><?php echo esc_html($form_data['package_name']); ?></div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php
+                    break;
+                    
+                case 'portal_based':
+                    ?>
+                    <div class="dsf-submission-section">
+                        <h3>🔌 Portal Details</h3>
+                        <?php if (isset($form_data['portal_name'])) : ?>
+                        <div class="dsf-info-row">
+                            <div class="dsf-info-label">Portal:</div>
+                            <div class="dsf-info-value"><?php echo esc_html($form_data['portal_name']); ?></div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php
+                    break;
+                    
+                case 'calculator':
+                    ?>
+                    <div class="dsf-submission-section">
+                        <h3>💰 Calculator Details</h3>
+                        <?php if (isset($form_data['user_input_amount'])) : ?>
+                        <div class="dsf-info-row">
+                            <div class="dsf-info-label">Input Amount:</div>
+                            <div class="dsf-info-value">$<?php echo esc_html(number_format(floatval($form_data['user_input_amount']), 2)); ?></div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php
+                    break;
+            }
+        endif; ?>
+
+        <div class="dsf-price-box">
+            <div class="dsf-price-label">Total Service Cost</div>
+            <div class="dsf-price-amount">$<?php echo esc_html(number_format(floatval($submission['total_price']), 2)); ?></div>
+        </div>
+
+        <div class="dsf-submission-section">
+            <h3>📋 Submission Status</h3>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Submitted:</div>
+                <div class="dsf-info-value"><?php echo esc_html(date_format(date_create($submission['created_at']), 'M d, Y \a\t H:i:s')); ?></div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Submission ID:</div>
+                <div class="dsf-info-value"><strong>#<?php echo intval($submission['id']); ?></strong></div>
+            </div>
+        </div>
+
+        <?php if (!empty($submission['notes'])) : ?>
+        <div class="dsf-submission-section">
+            <h3>📝 Additional Notes</h3>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6; border-left: 4px solid #3498db;">
+                <?php echo nl2br(esc_html($submission['notes'])); ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php
+        
+        wp_send_json_success([
+            'html' => ob_get_clean(),
+        ]);
     }
 }
