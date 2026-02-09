@@ -4,8 +4,8 @@
  * Plugin URI: https://example.com/dynamic-services-form
  * Description: Scalable, fully dynamic multi-step form plugin for service pricing and quotes with OOP PHP and custom database tables
  * Version: 1.0.0
- * Author: Your Name
- * Author URI: https://example.com
+ * Author: NomiDev
+ * Author URI: https://www.softcript.com/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dynamic-services-form
