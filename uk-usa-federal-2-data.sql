@@ -301,8 +301,8 @@ INSERT INTO wp_dsf_service_package_pricing (service_id, package_type_id, price, 
 
 -- Service 25: registered-agent-service
 INSERT INTO wp_dsf_service_package_pricing (service_id, package_type_id, price, description, enabled, created_at, updated_at) VALUES
-(25, 1, 120.00, 'Standard Registered Agent Service', 1, NOW(), NOW()),
-(25, 2, 150.00, 'Premium Registered Agent Service', 1, NOW(), NOW());
+(25, 1, 150.00, 'Standard Registered Agent Service', 1, NOW(), NOW()),
+(25, 2, 250.00, 'Premium Registered Agent Service', 1, NOW(), NOW());
 
 -- Service 26: ein-with-irs
 INSERT INTO wp_dsf_service_package_pricing (service_id, package_type_id, price, description, enabled, created_at, updated_at) VALUES

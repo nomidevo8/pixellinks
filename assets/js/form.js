@@ -225,7 +225,6 @@
         submitForm: function() {
             const self = this;
             const formData = this.collectFormData();
-
             const ajaxData = {
                 action: 'dsf_submit_form',
                 nonce: dsfFrontend.nonce,
