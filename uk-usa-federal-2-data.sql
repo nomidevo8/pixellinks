@@ -646,57 +646,57 @@ INSERT INTO wp_dsf_services (id, type, category, name, pricing_model, has_packag
 -- No packages needed, just select state and pay the state price
 
 INSERT INTO wp_dsf_service_location_pricing (service_id, location_id, standard_price, premium_price, is_universal, enabled, created_at, updated_at) VALUES
-(55, 1, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Alabama - $100.00
-(55, 2, 50.00, NULL, 0, 1, NOW(), NOW()),   -- Alaska - $50.00
-(55, 3, 50.00, NULL, 0, 1, NOW(), NOW()),   -- Arizona - $50.00
-(55, 4, 75.00, NULL, 0, 1, NOW(), NOW()),   -- Arkansas - $75.00
-(55, 5, 50.00, NULL, 0, 1, NOW(), NOW()),   -- California - $50.00
-(55, 6, 50.00, NULL, 0, 1, NOW(), NOW()),   -- Colorado - $50.00
-(55, 7, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Connecticut - $100.00
-(55, 8, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Delaware - $100.00
-(55, 9, 60.00, NULL, 0, 1, NOW(), NOW()),   -- Florida - $60.00
-(55, 10, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Georgia - $50.00
-(55, 11, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Hawaii - $50.00
-(55, 12, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Idaho - $50.00
-(55, 13, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Illinois - $100.00
-(55, 14, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Indiana - $50.00
-(55, 15, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Iowa - $50.00
-(55, 16, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Kansas - $50.00
-(55, 17, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Kentucky - $50.00
-(55, 18, 60.00, NULL, 0, 1, NOW(), NOW()),  -- Louisiana - $60.00
-(55, 19, 80.00, NULL, 0, 1, NOW(), NOW()),  -- Maine - $80.00
-(55, 20, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Maryland - $100.00
-(55, 21, 75.00, NULL, 0, 1, NOW(), NOW()),  -- Massachusetts - $75.00
-(55, 22, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Michigan - $50.00
-(55, 23, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Minnesota - $50.00
-(55, 24, 75.00, NULL, 0, 1, NOW(), NOW()),  -- Mississippi - $75.00
-(55, 25, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Missouri - $50.00
-(55, 26, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Montana - $50.00
-(55, 27, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Nebraska - $50.00
-(55, 28, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Nevada - $100.00
-(55, 29, 50.00, NULL, 0, 1, NOW(), NOW()),  -- New Hampshire - $50.00
-(55, 30, 75.00, NULL, 0, 1, NOW(), NOW()),  -- New Jersey - $75.00
-(55, 31, 75.00, NULL, 0, 1, NOW(), NOW()),  -- New Mexico - $75.00
-(55, 32, 75.00, NULL, 0, 1, NOW(), NOW()),  -- New York - $75.00
-(55, 33, 75.00, NULL, 0, 1, NOW(), NOW()),  -- North Carolina - $75.00
-(55, 34, 75.00, NULL, 0, 1, NOW(), NOW()),  -- North Dakota - $75.00
-(55, 35, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Ohio - $50.00
-(55, 36, 70.00, NULL, 0, 1, NOW(), NOW()),  -- Oklahoma - $70.00
-(55, 37, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Oregon - $50.00
-(55, 38, 100.00, NULL, 0, 1, NOW(), NOW()),  -- Pennsylvania - $100.00
-(55, 39, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Rhode Island - $50.00
-(55, 40, 50.00, NULL, 0, 1, NOW(), NOW()),  -- South Carolina - $50.00
-(55, 41, 70.00, NULL, 0, 1, NOW(), NOW()),  -- South Dakota - $70.00
-(55, 42, 70.00, NULL, 0, 1, NOW(), NOW()),  -- Tennessee - $70.00
-(55, 43, 70.00, NULL, 0, 1, NOW(), NOW()),  -- Texas - $70.00
-(55, 44, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Utah - $50.00
-(55, 45, 75.00, NULL, 0, 1, NOW(), NOW()),  -- Vermont - $75.00
-(55, 46, 75.00, NULL, 0, 1, NOW(), NOW()),  -- Virginia - $75.00
-(55, 47, 75.00, NULL, 0, 1, NOW(), NOW()),  -- Washington - $75.00
-(55, 48, 50.00, NULL, 0, 1, NOW(), NOW()),  -- West Virginia - $50.00
-(55, 49, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Wisconsin - $50.00
-(55, 50, 50.00, NULL, 0, 1, NOW(), NOW()),  -- Wyoming - $50.00
-(55, 51, 100.00, NULL, 0, 1, NOW(), NOW()); -- District of Columbia - $100.00
+(55, 1, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Alabama - $100.00
+(55, 2, 50.00, NULL, 1, 1, NOW(), NOW()),   -- Alaska - $50.00
+(55, 3, 50.00, NULL, 1, 1, NOW(), NOW()),   -- Arizona - $50.00
+(55, 4, 75.00, NULL, 1, 1, NOW(), NOW()),   -- Arkansas - $75.00
+(55, 5, 50.00, NULL, 1, 1, NOW(), NOW()),   -- California - $50.00
+(55, 6, 50.00, NULL, 1, 1, NOW(), NOW()),   -- Colorado - $50.00
+(55, 7, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Connecticut - $100.00
+(55, 8, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Delaware - $100.00
+(55, 9, 60.00, NULL, 1, 1, NOW(), NOW()),   -- Florida - $60.00
+(55, 10, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Georgia - $50.00
+(55, 11, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Hawaii - $50.00
+(55, 12, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Idaho - $50.00
+(55, 13, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Illinois - $100.00
+(55, 14, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Indiana - $50.00
+(55, 15, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Iowa - $50.00
+(55, 16, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Kansas - $50.00
+(55, 17, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Kentucky - $50.00
+(55, 18, 60.00, NULL, 1, 1, NOW(), NOW()),  -- Louisiana - $60.00
+(55, 19, 80.00, NULL, 1, 1, NOW(), NOW()),  -- Maine - $80.00
+(55, 20, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Maryland - $100.00
+(55, 21, 75.00, NULL, 1, 1, NOW(), NOW()),  -- Massachusetts - $75.00
+(55, 22, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Michigan - $50.00
+(55, 23, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Minnesota - $50.00
+(55, 24, 75.00, NULL, 1, 1, NOW(), NOW()),  -- Mississippi - $75.00
+(55, 25, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Missouri - $50.00
+(55, 26, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Montana - $50.00
+(55, 27, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Nebraska - $50.00
+(55, 28, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Nevada - $100.00
+(55, 29, 50.00, NULL, 1, 1, NOW(), NOW()),  -- New Hampshire - $50.00
+(55, 30, 75.00, NULL, 1, 1, NOW(), NOW()),  -- New Jersey - $75.00
+(55, 31, 75.00, NULL, 1, 1, NOW(), NOW()),  -- New Mexico - $75.00
+(55, 32, 75.00, NULL, 1, 1, NOW(), NOW()),  -- New York - $75.00
+(55, 33, 75.00, NULL, 1, 1, NOW(), NOW()),  -- North Carolina - $75.00
+(55, 34, 75.00, NULL, 1, 1, NOW(), NOW()),  -- North Dakota - $75.00
+(55, 35, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Ohio - $50.00
+(55, 36, 70.00, NULL, 1, 1, NOW(), NOW()),  -- Oklahoma - $70.00
+(55, 37, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Oregon - $50.00
+(55, 38, 100.00, NULL, 1, 1, NOW(), NOW()),  -- Pennsylvania - $100.00
+(55, 39, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Rhode Island - $50.00
+(55, 40, 50.00, NULL, 1, 1, NOW(), NOW()),  -- South Carolina - $50.00
+(55, 41, 70.00, NULL, 1, 1, NOW(), NOW()),  -- South Dakota - $70.00
+(55, 42, 70.00, NULL, 1, 1, NOW(), NOW()),  -- Tennessee - $70.00
+(55, 43, 70.00, NULL, 1, 1, NOW(), NOW()),  -- Texas - $70.00
+(55, 44, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Utah - $50.00
+(55, 45, 75.00, NULL, 1, 1, NOW(), NOW()),  -- Vermont - $75.00
+(55, 46, 75.00, NULL, 1, 1, NOW(), NOW()),  -- Virginia - $75.00
+(55, 47, 75.00, NULL, 1, 1, NOW(), NOW()),  -- Washington - $75.00
+(55, 48, 50.00, NULL, 1, 1, NOW(), NOW()),  -- West Virginia - $50.00
+(55, 49, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Wisconsin - $50.00
+(55, 50, 50.00, NULL, 1, 1, NOW(), NOW()),  -- Wyoming - $50.00
+(55, 51, 100.00, NULL, 1, 1, NOW(), NOW()); -- District of Columbia - $100.00
 
 -- =============================================================================
 -- NOTES FOR IMPLEMENTATION
