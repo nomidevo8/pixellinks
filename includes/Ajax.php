@@ -255,30 +255,30 @@ class Ajax {
         
         // Save submission
         global $wpdb;
-        // $result = $wpdb->insert(
-        //     Database::get_table('submissions'),
-        //     [
-        //         'service_id' => $service->get_id(),
-        //         'form_data' => wp_json_encode($form_data),
-        //         'total_price' => $total_price,
-        //         'first_name' => $form_data['first_name'],
-        //         'last_name' => $form_data['last_name'],
-        //         'business_name' => $form_data['business_name'],
-        //         'business_address' => $form_data['business_address'],
-        //         'phone' => $form_data['phone'],
-        //         'email' => $form_data['email'],
-        //         'city' => $form_data['city'],
-        //         'state' => $form_data['state'],
-        //         'zipcode' => $form_data['zipcode'],
-        //         'notes' => $form_data['notes'],
-        //         'status' => 'pending',
-        //     ],
-        //     ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
-        // );
+        $result = $wpdb->insert(
+            Database::get_table('submissions'),
+            [
+                'service_id' => $service->get_id(),
+                'form_data' => wp_json_encode($form_data),
+                'total_price' => $total_price,
+                'first_name' => $form_data['first_name'],
+                'last_name' => $form_data['last_name'],
+                'business_name' => $form_data['business_name'],
+                'business_address' => $form_data['business_address'],
+                'phone' => $form_data['phone'],
+                'email' => $form_data['email'],
+                'city' => $form_data['city'],
+                'state' => $form_data['state'],
+                'zipcode' => $form_data['zipcode'],
+                'notes' => $form_data['notes'],
+                'status' => 'pending',
+            ],
+            ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+        );
         
-        // if (!$result) {
-        //     wp_send_json_error(['message' => 'Failed to submit form']);
-        // }
+        if (!$result) {
+            wp_send_json_error(['message' => 'Failed to submit form']);
+        }
         
         // Do something with the submission (e.g., send email)
         do_action('dsf_form_submitted', $wpdb->insert_id, $service, $form_data, $total_price, $service_name);
@@ -334,146 +334,146 @@ class Ajax {
 
         // Build modern HTML email
         $message = '<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>New Submission</title>
-        <style>
-            body { font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; }
-            .container { max-width: 700px; margin: 0 auto; }
-            .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
-            .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-            .header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
-            .content { background: white; padding: 30px 20px; }
-            .badge-new { display: inline-block; background: #e74c3c; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 15px; }
-            .section { margin-bottom: 25px; }
-            .section-title { font-size: 16px; font-weight: 600; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; }
-            .info-table { width: 100%; border-collapse: collapse; }
-            .info-table td { padding: 10px; border-bottom: 1px solid #ecf0f1; }
-            .info-table td:first-child { color: #555; font-weight: 600; width: 35%; background: #f8f9fa; }
-            .info-table td:last-child { color: #333; }
-            .price-section { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); padding: 20px; border-radius: 8px; margin: 20px 0; color: white; }
-            .total-price { font-size: 32px; font-weight: 700; text-align: center; }
-            .price-label { font-size: 12px; text-align: center; margin-bottom: 5px; opacity: 0.9; }
-            .pricing-model { background: #ecf0f1; padding: 10px 15px; border-radius: 4px; font-size: 12px; color: #2c3e50; margin: 15px 0; }
-            .alert-box { background: #fff8e1; border-left: 4px solid #f39c12; padding: 15px; margin: 15px 0; border-radius: 4px; }
-            .alert-box strong { color: #d68910; }
-            .footer { background: #34495e; padding: 20px; text-align: center; font-size: 12px; color: white; border-radius: 0 0 8px 8px; }
-            .footer-link { color: #3498db; text-decoration: none; }
-            .action-button { display: inline-block; background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-size: 13px; }
-        </style>
-    </head>
-    <body style="background-color: #ecf0f1; margin: 0; padding: 20px;">
-        <div class="container" style="background: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); overflow: hidden;">
-            <div class="header">
-                <h1>🔔 New Submission Received</h1>
-                <p>Submission ID: #' . intval($submission_id) . '</p>
-            </div>
-
-            <div class="content">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <span class="badge-new">⚠️ ACTION REQUIRED</span>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>New Submission</title>
+            <style>
+                body { font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; }
+                .container { max-width: 700px; margin: 0 auto; }
+                .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+                .header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
+                .content { background: white; padding: 30px 20px; }
+                .badge-new { display: inline-block; background: #e74c3c; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 15px; }
+                .section { margin-bottom: 25px; }
+                .section-title { font-size: 16px; font-weight: 600; color: #2c3e50; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #3498db; }
+                .info-table { width: 100%; border-collapse: collapse; }
+                .info-table td { padding: 10px; border-bottom: 1px solid #ecf0f1; }
+                .info-table td:first-child { color: #555; font-weight: 600; width: 35%; background: #f8f9fa; }
+                .info-table td:last-child { color: #333; }
+                .price-section { background: linear-gradient(135deg, #27ae60 0%, #229954 100%); padding: 20px; border-radius: 8px; margin: 20px 0; color: white; }
+                .total-price { font-size: 32px; font-weight: 700; text-align: center; }
+                .price-label { font-size: 12px; text-align: center; margin-bottom: 5px; opacity: 0.9; }
+                .pricing-model { background: #ecf0f1; padding: 10px 15px; border-radius: 4px; font-size: 12px; color: #2c3e50; margin: 15px 0; }
+                .alert-box { background: #fff8e1; border-left: 4px solid #f39c12; padding: 15px; margin: 15px 0; border-radius: 4px; }
+                .alert-box strong { color: #d68910; }
+                .footer { background: #34495e; padding: 20px; text-align: center; font-size: 12px; color: white; border-radius: 0 0 8px 8px; }
+                .footer-link { color: #3498db; text-decoration: none; }
+                .action-button { display: inline-block; background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-size: 13px; }
+            </style>
+        </head>
+        <body style="background-color: #ecf0f1; margin: 0; padding: 20px;">
+            <div class="container" style="background: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); overflow: hidden;">
+                <div class="header">
+                    <h1>🔔 New Submission Received</h1>
+                    <p>Submission ID: #' . intval($submission_id) . '</p>
                 </div>
 
-                <div class="section">
-                    <div class="section-title">👤 Customer Information</div>
-                    <table class="info-table">
-                        <tr>
-                            <td>👨 First Name:</td>
-                            <td>' . esc_html($form_data['first_name']) . '</td>
-                        </tr>
-                        <tr>
-                            <td>👨 Last Name:</td>
-                            <td>' . esc_html($form_data['last_name']) . '</td>
-                        </tr>
-                    </table>
-                </div>
+                <div class="content">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span class="badge-new">⚠️ ACTION REQUIRED</span>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">👤 Customer Information</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>👨 First Name:</td>
+                                <td>' . esc_html($form_data['first_name']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>👨 Last Name:</td>
+                                <td>' . esc_html($form_data['last_name']) . '</td>
+                            </tr>
+                        </table>
+                    </div>
 
 
-                <div class="section">
-                    <div class="section-title">🏠 Business Information</div>
-                    <table class="info-table">
-                        <tr>
-                            <td>🏢 Business Name:</td>
-                            <td>' . esc_html($form_data['business_name']) . '</td>
-                        </tr>
-                        <tr>
-                            <td>📍 Business Address:</td>
-                            <td>' . esc_html($form_data['business_address']) . '</td>
-                        </tr>
-                        <tr>
-                            <td>🏙️ Business City:</td>
-                            <td>' . esc_html($form_data['city']) . '</td>
-                        </tr>
-                        <tr>
-                            <td>🗺️ Business State:</td>
-                            <td>' . esc_html($form_data['state']) . '</td>
-                        </tr>
-                        <tr>
-                            <td>📬 Business Zip Code:</td>
-                            <td>' . esc_html($form_data['zipcode']) . '</td>
-                        </tr>
+                    <div class="section">
+                        <div class="section-title">🏠 Business Information</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>🏢 Business Name:</td>
+                                <td>' . esc_html($form_data['business_name']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>📍 Business Address:</td>
+                                <td>' . esc_html($form_data['business_address']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>🏙️ Business City:</td>
+                                <td>' . esc_html($form_data['city']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>🗺️ Business State:</td>
+                                <td>' . esc_html($form_data['state']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>📬 Business Zip Code:</td>
+                                <td>' . esc_html($form_data['zipcode']) . '</td>
+                            </tr>
 
-                        <tr>
-                            <td>📧 Business Email:</td>
-                            <td><a href="mailto:' . esc_attr($form_data['email']) . '" style="color: #3498db;">' . esc_html($form_data['email']) . '</a></td>
-                        </tr>
-                        <tr>
-                            <td>📱 Business Phone:</td>
-                            <td><a href="tel:' . esc_attr($form_data['phone']) . '" style="color: #3498db;">' . esc_html($form_data['phone']) . '</a></td>
-                        </tr>
-                    </table>
-                </div>
+                            <tr>
+                                <td>📧 Business Email:</td>
+                                <td><a href="mailto:' . esc_attr($form_data['email']) . '" style="color: #3498db;">' . esc_html($form_data['email']) . '</a></td>
+                            </tr>
+                            <tr>
+                                <td>📱 Business Phone:</td>
+                                <td><a href="tel:' . esc_attr($form_data['phone']) . '" style="color: #3498db;">' . esc_html($form_data['phone']) . '</a></td>
+                            </tr>
+                        </table>
+                    </div>
 
-                <div class="section">
-                    <div class="section-title">🎯 Service Information</div>
-                    <table class="info-table">
-                        <tr>
-                            <td>📋 Service Type:</td>
-                            <td>' . esc_html($service_type) . '</td>
-                        </tr>
-                        <tr>
-                            <td>📋 Service Category:</td>
-                            <td>' . esc_html($service_category) . '</td>
-                        </tr>
-                        <tr>
-                            <td>📋 Service Name:</td>
-                            <td>' . esc_html($service_name) . '</td>
-                        </tr>
-                
-                        <tr>
-                            <td>⚙️ Pricing Model:</td>
-                            <td><strong>' . ucfirst(str_replace('_', ' ', esc_html($form_data['pricing_model'] ?? 'fixed_price'))) . '</strong></td>
-                        </tr>
-                    </table>
-                    ' . (!empty($pricing_details) ? '<div class="pricing-model"><strong>Pricing Details:</strong><table width="100%" style="margin-top: 10px;">' . $pricing_details . '</table></div>' : '') . '
-                </div>
+                    <div class="section">
+                        <div class="section-title">🎯 Service Information</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>📋 Service Type:</td>
+                                <td>' . esc_html($service_type) . '</td>
+                            </tr>
+                            <tr>
+                                <td>📋 Service Category:</td>
+                                <td>' . esc_html($service_category) . '</td>
+                            </tr>
+                            <tr>
+                                <td>📋 Service Name:</td>
+                                <td>' . esc_html($service_name) . '</td>
+                            </tr>
+                    
+                            <tr>
+                                <td>⚙️ Pricing Model:</td>
+                                <td><strong>' . ucfirst(str_replace('_', ' ', esc_html($form_data['pricing_model'] ?? 'fixed_price'))) . '</strong></td>
+                            </tr>
+                        </table>
+                        ' . (!empty($pricing_details) ? '<div class="pricing-model"><strong>Pricing Details:</strong><table width="100%" style="margin-top: 10px;">' . $pricing_details . '</table></div>' : '') . '
+                    </div>
 
-                <div class="price-section">
-                    <div class="price-label">Total Service Cost</div>
-                    <div class="total-price">$' . number_format($total_price, 2) . '</div>
-                </div>
-                
-                ';
+                    <div class="price-section">
+                        <div class="price-label">Total Service Cost</div>
+                        <div class="total-price">$' . number_format($total_price, 2) . '</div>
+                    </div>
+                    
+                    ';
 
-                if (!empty($form_data['notes'])) {
-                    $message .= '<div class="section">
+                    if (!empty($form_data['notes'])) {
+                        $message .= '<div class="section">
                         <div class="section-title">📝 Additional Notes</div>
-                        <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6;">' . nl2br(esc_html($form_data['notes'])) . '</div>
-                    </div>';
-                }
+                            <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6;">' . nl2br(esc_html($form_data['notes'])) . '</div>
+                        </div>';
+                    }
 
-                $message .= '
-                <div class="footer">
-                    <p style="margin: 0 0 10px; font-size: 13px;"><strong>Submission received at:</strong> ' . current_time('Y-m-d H:i:s') . '</p>
-                    <p style="margin: 0; color: #bdc3c7;">&copy; ' . date('Y') . ' ' . get_bloginfo('name') . '. All Rights Reserved.</p>
+                    $message .= '
+                    <div class="footer">
+                        <p style="margin: 0 0 10px; font-size: 13px;"><strong>Submission received at:</strong> ' . current_time('Y-m-d H:i:s') . '</p>
+                        <p style="margin: 0; color: #bdc3c7;">&copy; ' . date('Y') . ' ' . get_bloginfo('name') . '. All Rights Reserved.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </body>
-</html>';
-        
+        </body>
+        </html>';
+    
         // Headers
         $headers = [
             'Content-Type: text/html; charset=UTF-8',
@@ -514,140 +514,140 @@ class Ajax {
 
         // Build modern HTML email
         $message = '<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submission Confirmed</title>
-    <style>
-        body { font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-        .header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
-        .content { background: white; padding: 30px 20px; }
-        .status-badge { display: inline-block; background: #4CAF50; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 20px; }
-        .section { margin-bottom: 25px; }
-        .section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
-        .info-table { width: 100%; border-collapse: collapse; }
-        .info-table td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
-        .info-table td:first-child { color: #666; font-weight: 500; width: 40%; }
-        .info-table td:last-child { color: #333; font-weight: 600; text-align: right; }
-        .price-section { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .total-price { font-size: 24px; font-weight: 700; color: #667eea; text-align: center; }
-        .price-label { font-size: 12px; color: #666; text-align: center; margin-bottom: 5px; }
-        .next-steps { background: #f9f9f9; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0; border-radius: 4px; }
-        .next-steps h4 { margin: 0 0 10px; color: #667eea; font-size: 14px; }
-        .next-steps ul { margin: 0; padding-left: 20px; }
-        .next-steps li { margin: 5px 0; color: #555; font-size: 13px; }
-        .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #777; border-radius: 0 0 8px 8px; }
-        .footer-link { color: #667eea; text-decoration: none; }
-        .contact-link { display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-size: 13px; }
-    </style>
-</head>
-<body style="background-color: #f5f5f5; margin: 0; padding: 20px;">
-    <div class="container" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
-        <div class="header">
-            <h1>✅ Submission Confirmed!</h1>
-            <p>Your service request has been received and is being processed</p>
-        </div>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Submission Confirmed</title>
+            <style>
+                body { font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+                .header p { margin: 5px 0 0; font-size: 14px; opacity: 0.9; }
+                .content { background: white; padding: 30px 20px; }
+                .status-badge { display: inline-block; background: #4CAF50; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 20px; }
+                .section { margin-bottom: 25px; }
+                .section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+                .info-table { width: 100%; border-collapse: collapse; }
+                .info-table td { padding: 10px; border-bottom: 1px solid #f0f0f0; }
+                .info-table td:first-child { color: #666; font-weight: 500; width: 40%; }
+                .info-table td:last-child { color: #333; font-weight: 600; text-align: right; }
+                .price-section { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 20px; border-radius: 8px; margin: 20px 0; }
+                .total-price { font-size: 24px; font-weight: 700; color: #667eea; text-align: center; }
+                .price-label { font-size: 12px; color: #666; text-align: center; margin-bottom: 5px; }
+                .next-steps { background: #f9f9f9; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0; border-radius: 4px; }
+                .next-steps h4 { margin: 0 0 10px; color: #667eea; font-size: 14px; }
+                .next-steps ul { margin: 0; padding-left: 20px; }
+                .next-steps li { margin: 5px 0; color: #555; font-size: 13px; }
+                .footer { background: #f4f4f4; padding: 20px; text-align: center; font-size: 12px; color: #777; border-radius: 0 0 8px 8px; }
+                .footer-link { color: #667eea; text-decoration: none; }
+                .contact-link { display: inline-block; background: #667eea; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-size: 13px; }
+            </style>
+        </head>
+        <body style="background-color: #f5f5f5; margin: 0; padding: 20px;">
+            <div class="container" style="background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
+                <div class="header">
+                    <h1>✅ Submission Confirmed!</h1>
+                    <p>Your service request has been received and is being processed</p>
+                </div>
 
-        <div class="content">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <span class="status-badge">Status: PENDING REVIEW</span>
+                <div class="content">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <span class="status-badge">Status: PENDING REVIEW</span>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">👤 Your Information</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>Name:</td>
+                                <td>' . esc_html($form_data['first_name'] . ' ' . $form_data['last_name']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>Business:</td>
+                                <td>' . esc_html($form_data['business_name']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>Email:</td>
+                                <td>' . esc_html($form_data['email']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>Phone:</td>
+                                <td>' . esc_html($form_data['phone']) . '</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">🎯 Service Details</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>Service:</td>
+                                <td>' . esc_html($service_name) . '</td>
+                            </tr>
+                            ' . $pricing_details . '
+                        </table>
+                    </div>
+
+                    <div class="price-section">
+                        <div class="price-label">Estimated Total Cost</div>
+                        <div class="total-price">$' . number_format($total_price, 2) . '</div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-title">📍 Service Address</div>
+                        <table class="info-table">
+                            <tr>
+                                <td>Address:</td>
+                                <td>' . esc_html($form_data['business_address']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>City:</td>
+                                <td>' . esc_html($form_data['city']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>State:</td>
+                                <td>' . esc_html($form_data['state']) . '</td>
+                            </tr>
+                            <tr>
+                                <td>Zip Code:</td>
+                                <td>' . esc_html($form_data['zipcode']) . '</td>
+                            </tr>
+                        </table>
+                    </div>';
+
+                if (!empty($form_data['notes'])) {
+                    $message .= '<div class="section">
+                        <div class="section-title">📝 Additional Notes</div>
+                        <p style="color: #555; line-height: 1.6; margin: 0;">' . nl2br(esc_html($form_data['notes'])) . '</p>
+                    </div>';
+                }
+
+                $message .= '<div class="next-steps">
+                        <h4>⏭️ What\'s Next?</h4>
+                        <ul>
+                            <li><strong>Review:</strong> Our team will review your request within 24-48 hours</li>
+                            <li><strong>Confirmation:</strong> We\'ll send you a confirmation email with next steps</li>
+                            <li><strong>Questions?:</strong> Feel free to reach out - we\'re here to help!</li>
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 25px;">
+                        <p style="color: #666; font-size: 13px; margin: 0 0 10px;">Need help? Contact our support team</p>
+                        <a href="mailto:support@' . sanitize_text_field($_SERVER['SERVER_NAME'] ?? 'example.com') . '" class="contact-link">
+                            📧 Contact Support
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p style="margin: 0 0 10px;">Thank you for choosing our services!</p>
+                    <p style="margin: 0; color: #999;">&copy; ' . date('Y') . ' All Rights Reserved. | <a href="#" class="footer-link">Privacy Policy</a> | <a href="#" class="footer-link">Terms of Service</a></p>
+                </div>
             </div>
-
-            <div class="section">
-                <div class="section-title">👤 Your Information</div>
-                <table class="info-table">
-                    <tr>
-                        <td>Name:</td>
-                        <td>' . esc_html($form_data['first_name'] . ' ' . $form_data['last_name']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>Business:</td>
-                        <td>' . esc_html($form_data['business_name']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>Email:</td>
-                        <td>' . esc_html($form_data['email']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>Phone:</td>
-                        <td>' . esc_html($form_data['phone']) . '</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="section">
-                <div class="section-title">🎯 Service Details</div>
-                <table class="info-table">
-                    <tr>
-                        <td>Service:</td>
-                        <td>' . esc_html($service_name) . '</td>
-                    </tr>
-                    ' . $pricing_details . '
-                </table>
-            </div>
-
-            <div class="price-section">
-                <div class="price-label">Estimated Total Cost</div>
-                <div class="total-price">$' . number_format($total_price, 2) . '</div>
-            </div>
-
-            <div class="section">
-                <div class="section-title">📍 Service Address</div>
-                <table class="info-table">
-                    <tr>
-                        <td>Address:</td>
-                        <td>' . esc_html($form_data['business_address']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>City:</td>
-                        <td>' . esc_html($form_data['city']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>State:</td>
-                        <td>' . esc_html($form_data['state']) . '</td>
-                    </tr>
-                    <tr>
-                        <td>Zip Code:</td>
-                        <td>' . esc_html($form_data['zipcode']) . '</td>
-                    </tr>
-                </table>
-            </div>';
-
-        if (!empty($form_data['notes'])) {
-            $message .= '<div class="section">
-                <div class="section-title">📝 Additional Notes</div>
-                <p style="color: #555; line-height: 1.6; margin: 0;">' . nl2br(esc_html($form_data['notes'])) . '</p>
-            </div>';
-        }
-
-        $message .= '<div class="next-steps">
-                <h4>⏭️ What\'s Next?</h4>
-                <ul>
-                    <li><strong>Review:</strong> Our team will review your request within 24-48 hours</li>
-                    <li><strong>Confirmation:</strong> We\'ll send you a confirmation email with next steps</li>
-                    <li><strong>Questions?:</strong> Feel free to reach out - we\'re here to help!</li>
-                </ul>
-            </div>
-
-            <div style="text-align: center; margin-top: 25px;">
-                <p style="color: #666; font-size: 13px; margin: 0 0 10px;">Need help? Contact our support team</p>
-                <a href="mailto:support@' . sanitize_text_field($_SERVER['SERVER_NAME'] ?? 'example.com') . '" class="contact-link">
-                    📧 Contact Support
-                </a>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p style="margin: 0 0 10px;">Thank you for choosing our services!</p>
-            <p style="margin: 0; color: #999;">&copy; ' . date('Y') . ' All Rights Reserved. | <a href="#" class="footer-link">Privacy Policy</a> | <a href="#" class="footer-link">Terms of Service</a></p>
-        </div>
-    </div>
-</body>
-</html>';
+        </body>
+        </html>';
 
         // Headers
         $headers = [
@@ -728,9 +728,9 @@ class Ajax {
     private function calculate_tiered_price($amount) {
         if ($amount < 350000) {
             return 0; // Below minimum threshold
-        } else if ($amount >= 350000 && $amount < 500000) {
+        } elseif ($amount >= 350000 && $amount < 500000) {
             return 900.00;
-        } else if ($amount >= 500000 && $amount < 2000000) {
+        } elseif ($amount >= 500000 && $amount < 2000000) {
             return 1500.00;
         } else {
             // $2,000,000+: 1% of total amount
