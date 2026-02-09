@@ -92,8 +92,9 @@
          * Validate pricing step based on pricing model
          */
         validatePricingStep: function() {
-            const pricingModel = this.getPricingModel();
-
+            const pricingModel =
+                    $('#dsf-pricing-options-container').attr('data-pricing-model') || null;
+            console.log('pricingModel' , pricingModel)
             switch (pricingModel) {
                 case 'state_based':
                     if (!$('#dsf-location').val()) {
@@ -189,23 +190,61 @@
         },
 
         /**
-         * Get selected portal
+         * Get selected location/state name
+         */
+        getSelectedLocationName: function() {
+            return $('#dsf-location option:selected').text() || null;
+        },
+
+        /**
+         * Get selected package name
+         */
+        getSelectedPackageName: function() {
+            const packageId = $('[name="package_id"]:checked').val();
+            if (!packageId) return null;
+            return $('[name="package_id"]:checked').closest('label').text().trim() || null;
+        },
+
+        /**
+         * Get selected portal name
+         */
+        getSelectedPortalName: function() {
+            return $('#dsf-portal option:selected').text() || null;
+        },
+
+        /**
+         * Get selected portal ID
          */
         getSelectedPortal: function() {
             return $('#dsf-portal').val() || null;
         },
 
         /**
-         * Collect form data
+         * Formute and human readable
+         */
+        formatHumanReadable: function (value) {
+            if (!value) return null;
+
+            return value
+                .replace(/[-_]/g, ' ')          
+                .replace(/\b\w/g, c => c.toUpperCase()); 
+        },
+
+        /**
+         * Collect form data based on pricing model
          */
         collectFormData: function() {
-            return {
+            const pricingModel =
+            $('#dsf-pricing-options-container').attr('data-pricing-model') || null;
+            const baseData = {
                 service_id: $('#dsf-service-select').val(),
                 service_name: $('#dsf-service-select option:selected').text(),
-                location_id: $('#dsf-location').val() || null,
-                package_id: $('[name="package_id"]:checked').val() || null,
-                portal_id: this.getSelectedPortal(),
-                calculator_amount: $('#dsf-calculator-amount').val() || null,
+                service_type: this.formatHumanReadable(
+                    $('input[name="service_type"]').val()
+                ),
+                service_category: this.formatHumanReadable(
+                    $('input[name="service_category"]').val()
+                ),
                 first_name: $('#dsf-first-name').val(),
                 last_name: $('#dsf-last-name').val(),
                 business_name: $('#dsf-business-name').val(),
@@ -215,9 +254,36 @@
                 city: $('#dsf-city').val(),
                 state: $('#dsf-state').val(),
                 zipcode: $('#dsf-zipcode').val(),
-                // entity_type removed
                 notes: $('#dsf-notes').val(),
+                pricing_model: pricingModel,
             };
+
+            // Add pricing-model-specific data
+            switch (pricingModel) {
+                case 'state_based':
+                    baseData.location_id = $('#dsf-location').val() || null;
+                    baseData.location_name = this.getSelectedLocationName();
+                    if ($('[name="package_id"]').length > 0 && $('[name="package_id"]:checked').val()) {
+                        baseData.package_id = $('[name="package_id"]:checked').val();
+                        baseData.package_name = this.getSelectedPackageName();
+                    }
+                    break;
+
+                case 'portal_based':
+                    baseData.portal_id = this.getSelectedPortal();
+                    baseData.portal_name = this.getSelectedPortalName();
+                    break;
+
+                case 'calculator':
+                    baseData.user_input_amount = $('#dsf-calculator-amount').val() || null;
+                    break;
+
+                case 'fixed_price':
+                    // Fixed price doesn't need additional data
+                    break;
+            }
+
+            return baseData;
         },
 
         /**
@@ -231,7 +297,6 @@
                 nonce: dsfFrontend.nonce,
                 ...formData,
             };
-
             $.ajax({
                 url: dsfFrontend.ajaxUrl,
                 type: 'POST',
@@ -239,8 +304,8 @@
                 success: function(response) {
                     if (response.success) {
                         // Hide form and show success message
-                        self.$form.hide();
-                        $('.dsf-success-message').show();
+                        // self.$form.hide();
+                        // $('.dsf-success-message').show();
                         console.log('Form submitted successfully:', response.data);
                     } else {
                         alert(response.data.message || 'Error submitting form');
@@ -250,22 +315,6 @@
                     alert('Error submitting form. Please try again.');
                 },
             });
-        },
-
-        /**
-         * Get pricing model from visible options
-         */
-        getPricingModel: function() {
-            if ($('#dsf-location').length && $('#dsf-location').is(':visible')) {
-                return 'state_based';
-            }
-            if ($('#dsf-portal').length && $('#dsf-portal').is(':visible')) {
-                return 'portal_based';
-            }
-            if ($('#dsf-calculator-amount').length && $('#dsf-calculator-amount').is(':visible')) {
-                return 'calculator';
-            }
-            return 'fixed_price';
         },
     };
 

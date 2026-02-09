@@ -117,7 +117,7 @@ class Form {
                     </div>
 
                     <!-- Dynamic Pricing Options Container -->
-                    <div id="dsf-pricing-options-container" class="dsf-pricing-options-container">
+                    <div id="dsf-pricing-options-container" class="dsf-pricing-options-container" data-pricing-model="">
                         <!-- Content loaded client-side after service selection -->
                     </div>
 
@@ -275,7 +275,6 @@ class Form {
                 if (serviceSelect) {
                     serviceSelect.addEventListener('change', function() {
                         var serviceId = parseInt(this.value);
-                        
                         if (!serviceId) {
                             document.getElementById('dsf-pricing-options-container').innerHTML = '';
                             resetPriceDisplay();
@@ -292,7 +291,6 @@ class Form {
                                 }
                             }
                         }
-                        
                         if (!service) {
                             console.error('Service not found in embedded data');
                             return;
@@ -340,7 +338,9 @@ class Form {
              */
             function renderPricingOptions(service) {
                 var html = '';
-
+                document
+                .getElementById('dsf-pricing-options-container')
+                .dataset.pricingModel = service.pricing_model;
                 switch (service.pricing_model) {
                     case 'state_based':
                         html = renderStateBased(service);
@@ -641,7 +641,6 @@ class Form {
                 if (!serviceName) {
                     return;
                 }
-                
                 // Find and select service by name
                 findAndSelectService(serviceName, packageName);
             }
@@ -718,7 +717,6 @@ class Form {
                 // If service found, select it and load pricing
                 if (selectedServiceId) {
                     serviceSelect.value = selectedServiceId;
-                    
                     // Trigger change event to load pricing options
                     if (serviceSelect.dispatchEvent) {
                         var event = new Event('change', { bubbles: true });
