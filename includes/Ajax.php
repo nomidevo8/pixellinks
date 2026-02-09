@@ -43,6 +43,8 @@ class Ajax {
         
         add_action('wp_ajax_dsf_get_review_summary', [$this, 'get_review_summary']);
         add_action('wp_ajax_nopriv_dsf_get_review_summary', [$this, 'get_review_summary']);
+        add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
+
     }
 
     /**
@@ -273,13 +275,103 @@ class Ajax {
         }
         
         // Do something with the submission (e.g., send email)
-        do_action('dsf_form_submitted', $wpdb->insert_id, $service, $form_data, $total_price);
+        do_action('dsf_form_submitted', $wpdb->insert_id, $service, $form_data, $total_price, $service_name);
         
         wp_send_json_success([
             'message' => 'Form submitted successfully',
             'submission_id' => $wpdb->insert_id,
         ]);
     }
+
+
+    /**
+     * Send email to admin when form is submitted
+     */
+    public function send_submission_email($submission_id, $service, $form_data, $total_price, $service_name) {
+        // Get admin email from settings
+        $admin_email = get_option('dsf_admin_email', get_option('admin_email'));
+        
+        if (!is_email($admin_email)) {
+            return; // No valid email
+        }
+
+        // Subject
+        $subject = sprintf('📩 New Submission for %s', $service_name);
+
+        // Clean form data to only send relevant fields
+        $fields_to_send = [
+            'First Name'      => $form_data['first_name'],
+            'Last Name'       => $form_data['last_name'],
+            'Business Name'   => $form_data['business_name'],
+            'Business Address'=> $form_data['business_address'],
+            'Phone'           => $form_data['phone'],
+            'Email'           => $form_data['email'],
+            'City'            => $form_data['city'],
+            'State'           => $form_data['state'],
+            'Zipcode'         => $form_data['zipcode'],
+            'Service Selected'=> $service_name,
+            'Total Price'     => '$' . number_format($total_price, 2),
+            'Notes'           => $form_data['notes'] ?? '',
+        ];
+
+        // Build modern HTML email
+        $message = '<!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <title>New Submission</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color:#f4f4f7; margin:0; padding:0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="padding: 20px 0;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+                        <tr>
+                            <td style="background-color:#4CAF50; color:#ffffff; padding:20px; text-align:center; font-size:24px; font-weight:bold;">
+                                New Service Submission
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:20px;">
+                                <p style="font-size:16px; color:#333;">You have received a new submission. Here are the details:</p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                                    <tbody>';
+        
+        // Add form fields
+        foreach ($fields_to_send as $label => $value) {
+            $message .= '<tr>
+                <td style="padding: 10px; border: 1px solid #eee; font-weight:bold; width:30%;">' . esc_html($label) . '</td>
+                <td style="padding: 10px; border: 1px solid #eee;">' . nl2br(esc_html($value)) . '</td>
+            </tr>';
+        }
+
+        $message .= '</tbody>
+                                </table>
+                                <p style="margin-top:20px; font-size:12px; color:#777;">Submission ID: ' . intval($submission_id) . '</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="background-color:#f4f4f7; padding:10px; text-align:center; font-size:12px; color:#777;">
+                                &copy; ' . date('Y') . ' Your Company Name. All rights reserved.
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>';
+
+        // Headers
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8',
+            'From: Dynamic Services <no-reply@' . $_SERVER['SERVER_NAME'] . '>'
+        ];
+
+        // Send email
+        wp_mail($admin_email, $subject, $message, $headers);
+    }
+
 
     /**
      * Calculate total price based on service and form data

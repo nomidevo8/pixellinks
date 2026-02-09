@@ -201,6 +201,7 @@
         collectFormData: function() {
             return {
                 service_id: $('#dsf-service-select').val(),
+                service_name: $('#dsf-service-select option:selected').text(),
                 location_id: $('#dsf-location').val() || null,
                 package_id: $('[name="package_id"]:checked').val() || null,
                 portal_id: this.getSelectedPortal(),
