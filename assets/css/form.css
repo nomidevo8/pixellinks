@@ -234,6 +234,9 @@
 .dsf-package-item input[type="radio"]:checked + .dsf-package-name {
     color: var(--primary-color);
 }
+.dsf-package-item input[type="radio"]:checked{
+    accent-color: var(--primary-color);
+}
 
 .dsf-package-name {
     display: block;
@@ -385,8 +388,9 @@
 
 .dsf-price-table tbody td {
     padding: 16px;
-    color: var(--text-primary);
+    color: var(--secondary-color);
     font-size: 14px;
+    background-color: var(--primary-color);
 }
 
 .dsf-price-table tbody tr#dsf-price-row td:last-child {
