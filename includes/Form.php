@@ -430,28 +430,22 @@ class Form {
              */
             function renderPortalBased(service) {
                 var html = '<div class="dsf-field-group">';
-                html += '<label>Select Portals (Multiple Selection) <span class="dsf-required">*</span></label>';
-                html += '<div class="dsf-portals-container">';
+                html += '<label for="dsf-portal">Select Portal <span class="dsf-required">*</span></label>';
+                html += '<select id="dsf-portal" name="portal_id" required>';
+                html += '<option value="">-- Select Portal --</option>';
                 
                 if (service.portals && service.portals.length > 0) {
                     for (var i = 0; i < service.portals.length; i++) {
                         var portal = service.portals[i];
-                        html += '<label class="dsf-portal-item">';
-                        html += '<input type="checkbox" name="portal_ids[]" ';
-                        html += 'value="' + escapeHtml(portal.id) + '" ';
-                        html += 'data-price="' + escapeHtml(portal.price || '') + '" ';
-                        html += 'data-portal-name="' + escapeHtml(portal.portal_name) + '">';
-                        html += '<span class="dsf-portal-name">' + escapeHtml(portal.portal_name) + '</span>';
-                        
-                        if (portal.price) {
-                            html += '<span class="dsf-portal-price">$' + parseFloat(portal.price).toFixed(2) + '</span>';
-                        }
-                        
-                        html += '</label>';
+                        var price = portal.price ? ' - $' + parseFloat(portal.price).toFixed(2) : '';
+                        html += '<option value="' + escapeHtml(portal.id) + '" ';
+                        html += 'data-price="' + escapeHtml(portal.price || '') + '">';
+                        html += escapeHtml(portal.portal_name) + price;
+                        html += '</option>';
                     }
                 }
                 
-                html += '</div></div>';
+                html += '</select></div>';
                 return html;
             }
 
@@ -999,21 +993,18 @@ class Form {
         $portals = $service->get_portals();
         ?>
         <div class="dsf-field-group">
-            <label><?php esc_html_e('Select Portals (Multiple Selection)', 'dynamic-services-form'); ?> <span class="dsf-required">*</span></label>
-            <div class="dsf-portals-container">
+            <label for="dsf-portal"><?php esc_html_e('Select Portal', 'dynamic-services-form'); ?> <span class="dsf-required">*</span></label>
+            <select id="dsf-portal" name="portal_id" required>
+                <option value="">-- <?php esc_html_e('Select Portal', 'dynamic-services-form'); ?> --</option>
                 <?php foreach ($portals as $portal) : ?>
-                    <label class="dsf-portal-item">
-                        <input type="checkbox" name="portal_ids[]" 
-                               value="<?php echo esc_attr($portal['id']); ?>"
-                               data-price="<?php echo esc_attr($portal['price'] ?? ''); ?>"
-                               data-portal-name="<?php echo esc_attr($portal['portal_name']); ?>">
-                        <span class="dsf-portal-name"><?php echo esc_html($portal['portal_name']); ?></span>
+                    <option value="<?php echo esc_attr($portal['id']); ?>">
+                        <?php echo esc_html($portal['portal_name']); ?>
                         <?php if (!empty($portal['price'])) : ?>
-                            <span class="dsf-portal-price">$<?php echo number_format((float) $portal['price'], 2); ?></span>
+                            - $<?php echo number_format((float) $portal['price'], 2); ?>
                         <?php endif; ?>
-                    </label>
+                    </option>
                 <?php endforeach; ?>
-            </div>
+            </select>
         </div>
         <?php
     }

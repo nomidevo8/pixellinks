@@ -107,8 +107,8 @@
                     break;
 
                 case 'portal_based':
-                    if ($('[name="portal_ids[]"]:checked').length === 0) {
-                        alert('Please select at least one portal');
+                    if (!$('#dsf-portal').val()) {
+                        alert('Please select a portal');
                         return false;
                     }
                     break;
@@ -189,12 +189,10 @@
         },
 
         /**
-         * Get selected portals
+         * Get selected portal
          */
-        getSelectedPortals: function() {
-            return $.map($('[name="portal_ids[]"]:checked'), function(el) {
-                return $(el).val();
-            });
+        getSelectedPortal: function() {
+            return $('#dsf-portal').val() || null;
         },
 
         /**
@@ -205,7 +203,7 @@
                 service_id: $('#dsf-service-select').val(),
                 location_id: $('#dsf-location').val() || null,
                 package_id: $('[name="package_id"]:checked').val() || null,
-                portal_ids: this.getSelectedPortals(),
+                portal_id: this.getSelectedPortal(),
                 calculator_amount: $('#dsf-calculator-amount').val() || null,
                 first_name: $('#dsf-first-name').val(),
                 last_name: $('#dsf-last-name').val(),
@@ -261,7 +259,7 @@
             if ($('#dsf-location').length && $('#dsf-location').is(':visible')) {
                 return 'state_based';
             }
-            if ($('[name="portal_ids[]"]').length && $('[name="portal_ids[]"]').is(':visible')) {
+            if ($('#dsf-portal').length && $('#dsf-portal').is(':visible')) {
                 return 'portal_based';
             }
             if ($('#dsf-calculator-amount').length && $('#dsf-calculator-amount').is(':visible')) {

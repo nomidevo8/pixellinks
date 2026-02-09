@@ -75,7 +75,7 @@ class Ajax {
         $service_id = isset($_POST['service_id']) ? intval($_POST['service_id']) : 0;
         $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
         $package_id = isset($_POST['package_id']) ? intval($_POST['package_id']) : 0;
-        $portal_ids = isset($_POST['portal_ids']) ? array_map('intval', (array) $_POST['portal_ids']) : [];
+        $portal_id = isset($_POST['portal_id']) ? intval($_POST['portal_id']) : 0;
         $calculator_amount = isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : 0;
         
         $service = new Service($service_id);
@@ -114,14 +114,14 @@ class Ajax {
                 break;
                 
             case 'portal_based':
-                foreach ($portal_ids as $portal_id) {
+                $portal_id = isset($_POST['portal_id']) ? intval($_POST['portal_id']) : 0;
+                if ($portal_id) {
                     $portal = new Portal($portal_id);
                     if ($portal->get_id()) {
-                        $price = floatval($portal->get('price') ?? 0);
-                        $total_price += $price;
+                        $total_price = floatval($portal->get('price') ?? 0);
+                        $price_label = $portal->get('portal_name') ?? 'Portal Fee';
                     }
                 }
-                $price_label = count($portal_ids) > 1 ? 'Multiple Portals' : 'Portal Fee';
                 break;
                 
             case 'fixed_price':
@@ -229,7 +229,7 @@ class Ajax {
         $form_data = [
             'location_id' => isset($_POST['location_id']) ? intval($_POST['location_id']) : null,
             'package_id' => isset($_POST['package_id']) ? intval($_POST['package_id']) : null,
-            'portal_ids' => isset($_POST['portal_ids']) ? array_map('intval', (array) $_POST['portal_ids']) : [],
+            'portal_id' => isset($_POST['portal_id']) ? intval($_POST['portal_id']) : null,
             'calculator_amount' => isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : null,
             'first_name' => sanitize_text_field($_POST['first_name']),
             'last_name' => sanitize_text_field($_POST['last_name']),
@@ -316,10 +316,10 @@ class Ajax {
                 break;
                 
             case 'portal_based':
-                foreach ($form_data['portal_ids'] as $portal_id) {
-                    $portal = new Portal($portal_id);
+                if (!empty($form_data['portal_id'])) {
+                    $portal = new Portal($form_data['portal_id']);
                     if ($portal->get_id()) {
-                        $total_price += floatval($portal->get('price') ?? 0);
+                        $total_price = floatval($portal->get('price') ?? 0);
                     }
                 }
                 break;
