@@ -119,10 +119,17 @@ class Plugin {
     public function enqueue_admin_assets() {
         // Only enqueue on DSF admin pages
         $screen = get_current_screen();
-        if ($screen && strpos($screen->id, 'dsf_') === false) {
+        if (!$screen) {
             return;
         }
-        
+
+        // Load only on Dynamic Services pages (main + all submenus)
+        if (strpos($screen->id, 'dsf') === false) {
+            // Debug (optional)
+       
+            return;
+        }
+
         wp_enqueue_style(
             'dsf-admin-style',
             DSF_PLUGIN_URL . 'assets/css/admin.css',

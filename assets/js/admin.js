@@ -21,12 +21,24 @@
             $(document).on('change', '#pricing_model', function() {
                 const model = $(this).val();
                 const $hasPackages = $('#has_packages').closest('tr');
+                const $fixedPrice = $('#fixed-price-row');
+                const $fixedPriceInput = $('#fixed_price');
+                    console.log("Here is the modal" . model);
 
                 if (model === 'state_based') {
                     $hasPackages.show();
-                } else if (model === 'portal_based' || model === 'calculator' || model === 'fixed_price') {
+                    $fixedPrice.hide();
+                    $fixedPriceInput.prop('required', false);
+                } else if (model === 'portal_based' || model === 'calculator') {
                     $hasPackages.hide();
+                    $fixedPrice.hide();
                     $('#has_packages').prop('checked', false);
+                    $fixedPriceInput.prop('required', false);
+                } else if (model === 'fixed_price') {
+                    $hasPackages.hide();
+                    $fixedPrice.show();
+                    $('#has_packages').prop('checked', false);
+                    $fixedPriceInput.prop('required', true);
                 }
             });
 

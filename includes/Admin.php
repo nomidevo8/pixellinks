@@ -335,11 +335,11 @@ class Admin {
                             </select>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="fixed-price-row" style="display: none;">
                         <th scope="row"><label for="fixed_price"><?php esc_html_e('Fixed Price', 'dynamic-services-form'); ?></label></th>
                         <td>
                             <input type="number" id="fixed_price" name="fixed_price" step="0.01" value="<?php echo esc_attr($service_data['fixed_price']); ?>">
-                            <p class="description"><?php esc_html_e("Used when Pricing Model is 'Fixed Price'. Leave empty otherwise.", 'dynamic-services-form'); ?></p>
+                            <p class="description"><?php esc_html_e('Price for fixed price model. Required when Pricing Model is "Fixed Price".', 'dynamic-services-form'); ?></p>
                         </td>
                     </tr>
                     <tr>
