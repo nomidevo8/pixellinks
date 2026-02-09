@@ -393,10 +393,18 @@ class Form {
 
                 // Add packages if service has them
                 if (service.has_packages && service.packages && service.packages.length > 0) {
+                    // Sort packages: Standard first, Premium second
+                    service.packages.sort(function(a, b) {
+                        const order = { 'Standard': 1, 'Premium': 2 };
+                        const aOrder = order[a.package_type_name] || 99;
+                        const bOrder = order[b.package_type_name] || 99;
+                        return aOrder - bOrder;
+                    });
+
                     html += '<div class="dsf-field-group">';
                     html += '<label>Package / Plan <span class="dsf-required">*</span></label>';
                     html += '<div class="dsf-packages-container">';
-                    
+
                     for (var j = 0; j < service.packages.length; j++) {
                         var pkg = service.packages[j];
                         html += '<label class="dsf-package-item">';
@@ -406,16 +414,17 @@ class Form {
                         html += 'data-package-name="' + escapeHtml(pkg.package_type_name) + '" ';
                         html += 'required>';
                         html += '<span class="dsf-package-name">' + escapeHtml(pkg.package_type_name) + '</span>';
-                        
+
                         if (pkg.price) {
                             html += '<span class="dsf-package-price">$' + parseFloat(pkg.price).toFixed(2) + '</span>';
                         }
-                        
+
                         html += '</label>';
                     }
-                    
+
                     html += '</div></div>';
                 }
+
 
                 return html;
             }
