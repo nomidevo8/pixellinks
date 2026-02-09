@@ -184,8 +184,7 @@ class Ajax {
                 <span><?php echo isset($form_data['email']) ? esc_html($form_data['email']) : '--'; ?></span><br>
                 <strong><?php esc_html_e('Phone:', 'dynamic-services-form'); ?></strong> 
                 <span><?php echo isset($form_data['phone']) ? esc_html($form_data['phone']) : '--'; ?></span><br>
-                <strong><?php esc_html_e('Entity Type:', 'dynamic-services-form'); ?></strong> 
-                <span><?php echo isset($form_data['entity_type']) ? esc_html($form_data['entity_type']) : '--'; ?></span>
+                <!-- Entity Type removed -->
             </p>
         </div>
         <?php
@@ -240,7 +239,6 @@ class Ajax {
             'city' => sanitize_text_field($_POST['city']),
             'state' => sanitize_text_field($_POST['state']),
             'zipcode' => sanitize_text_field($_POST['zipcode']),
-            'entity_type' => isset($_POST['entity_type']) ? sanitize_text_field($_POST['entity_type']) : '',
             'notes' => isset($_POST['notes']) ? sanitize_textarea_field($_POST['notes']) : '',
         ];
         
@@ -264,11 +262,10 @@ class Ajax {
                 'city' => $form_data['city'],
                 'state' => $form_data['state'],
                 'zipcode' => $form_data['zipcode'],
-                'entity_type' => $form_data['entity_type'],
                 'notes' => $form_data['notes'],
                 'status' => 'pending',
             ],
-            ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+            ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
         );
         
         if (!$result) {

@@ -214,7 +214,7 @@
                 city: $('#dsf-city').val(),
                 state: $('#dsf-state').val(),
                 zipcode: $('#dsf-zipcode').val(),
-                entity_type: $('#dsf-entity-type').val(),
+                // entity_type removed
                 notes: $('#dsf-notes').val(),
             };
         },

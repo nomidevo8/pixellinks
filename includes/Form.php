@@ -226,19 +226,7 @@ class Form {
                             <input type="tel" id="dsf-phone" name="phone" required>
                         </div>
 
-                        <!-- Entity Type (Optional) -->
-                        <div class="dsf-field-group dsf-field-6">
-                            <label for="dsf-entity-type">
-                                <?php esc_html_e('Entity Type', 'dynamic-services-form'); ?>
-                            </label>
-                            <select id="dsf-entity-type" name="entity_type">
-                                <option value="">-- <?php esc_html_e('Select', 'dynamic-services-form'); ?> --</option>
-                                <option value="sole-proprietor"><?php esc_html_e('Sole Proprietor', 'dynamic-services-form'); ?></option>
-                                <option value="partnership"><?php esc_html_e('Partnership', 'dynamic-services-form'); ?></option>
-                                <option value="llc"><?php esc_html_e('LLC', 'dynamic-services-form'); ?></option>
-                                <option value="corporation"><?php esc_html_e('Corporation', 'dynamic-services-form'); ?></option>
-                            </select>
-                        </div>
+                        <!-- Entity Type removed -->
 
                         <!-- Additional Notes (Optional) -->
                         <div class="dsf-field-group dsf-field-6">
