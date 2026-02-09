@@ -126,22 +126,14 @@ class Form {
                         <table class="dsf-price-table">
                             <thead>
                                 <tr>
-                                    <th><?php esc_html_e('Item', 'dynamic-services-form'); ?></th>
                                     <th><?php esc_html_e('Total', 'dynamic-services-form'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr id="dsf-price-row">
-                                    <td id="dsf-price-label">--</td>
-                                    <td id="dsf-price-value">--</td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr class="dsf-price-total-row">
-                                    <td><?php esc_html_e('Total', 'dynamic-services-form'); ?></td>
+                              <tr class="dsf-price-total-row">
                                     <td id="dsf-total-price-display">$0.00</td>
                                 </tr>
-                            </tfoot>
+                            </tbody>
                         </table>
                     </div>
 
@@ -465,8 +457,6 @@ class Form {
                 
                 // Update price display immediately
                 setTimeout(function() {
-                    document.getElementById('dsf-price-label').textContent = service.name;
-                    document.getElementById('dsf-price-value').textContent = '$' + parseFloat(fixedPrice).toFixed(2);
                     document.getElementById('dsf-total-price-display').textContent = '$' + parseFloat(fixedPrice).toFixed(2);
                 }, 100);
                 
@@ -539,8 +529,6 @@ class Form {
                         break;
                 }
 
-                document.getElementById('dsf-price-label').textContent = priceLabel;
-                document.getElementById('dsf-price-value').textContent = '$' + totalPrice.toFixed(2);
                 document.getElementById('dsf-total-price-display').textContent = '$' + totalPrice.toFixed(2);
             }
 
@@ -612,8 +600,7 @@ class Form {
              * Reset price display to default
              */
             function resetPriceDisplay() {
-                document.getElementById('dsf-price-label').textContent = '--';
-                document.getElementById('dsf-price-value').textContent = '--';
+                
                 document.getElementById('dsf-total-price-display').textContent = '$0.00';
             }
 
