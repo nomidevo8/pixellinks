@@ -91,6 +91,22 @@ class Plugin {
      * Enqueue frontend assets
      */
     public function enqueue_frontend_assets() {
+        // Enqueue SweetAlert2 library
+        wp_enqueue_style(
+            'sweetalert2-style',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css',
+            [],
+            '11'
+        );
+        
+        wp_enqueue_script(
+            'sweetalert2-script',
+            'https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js',
+            [],
+            '11',
+            true
+        );
+        
         wp_enqueue_style(
             'dsf-frontend-style',
             DSF_PLUGIN_URL . 'assets/css/form.css',
@@ -101,7 +117,7 @@ class Plugin {
         wp_enqueue_script(
             'dsf-frontend-script',
             DSF_PLUGIN_URL . 'assets/js/form.js',
-            ['jquery'],
+            ['jquery', 'sweetalert2-script'],
             DSF_PLUGIN_VERSION,
             true
         );

@@ -2,6 +2,7 @@
  * Dynamic Services Form - Frontend JavaScript
  * 2-Step Workflow: Service + Pricing -> Contact Info
  * Note: Service selection and pricing are now handled inline in Form.php
+ * Includes beautiful loaders and notifications with SweetAlert2
  */
 
 (function($) {
@@ -10,6 +11,7 @@
     const DSFForm = {
         currentStep: 1,
         totalSteps: 2,
+        isSubmitting: false,
 
         /**
          * Initialize the form
@@ -71,7 +73,13 @@
             switch (step) {
                 case 1: // Service + Pricing
                     if (!$('#dsf-service-select').val()) {
-                        alert(dsfFrontend.validateMessages?.selectService || 'Please select a service');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Service Required',
+                            text: dsfFrontend.validateMessages?.selectService || 'Please select a service',
+                            confirmButtonColor: '#3498db',
+                            confirmButtonText: 'OK'
+                        });
                         isValid = false;
                     } else if (!this.validatePricingStep()) {
                         isValid = false;
@@ -98,25 +106,49 @@
             switch (pricingModel) {
                 case 'state_based':
                     if (!$('#dsf-location').val()) {
-                        alert('Please select a location');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Location Required',
+                            text: 'Please select a location',
+                            confirmButtonColor: '#3498db',
+                            confirmButtonText: 'OK'
+                        });
                         return false;
                     }
                     if ($('[name="package_id"]').length > 0 && !$('[name="package_id"]:checked').val()) {
-                        alert('Please select a package');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Package Required',
+                            text: 'Please select a package',
+                            confirmButtonColor: '#3498db',
+                            confirmButtonText: 'OK'
+                        });
                         return false;
                     }
                     break;
 
                 case 'portal_based':
                     if (!$('#dsf-portal').val()) {
-                        alert('Please select a portal');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Portal Required',
+                            text: 'Please select a portal',
+                            confirmButtonColor: '#3498db',
+                            confirmButtonText: 'OK'
+                        });
                         return false;
                     }
                     break;
 
                 case 'calculator':
                     if (!$('#dsf-calculator-amount').val() || $('#dsf-calculator-amount').val() <= 0) {
-                        alert('Please enter a valid amount');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Valid Amount Required',
+                            text: 'Please enter a valid amount',
+                            confirmButtonColor: '#3498db',
+                            confirmButtonText: 'OK'
+                        });
                         return false;
                     }
                     break;
@@ -134,13 +166,25 @@
             for (let field of requiredFields) {
                 const value = $('#dsf-' + field.replace(/_/g, '-')).val().trim();
                 if (!value) {
-                    alert('Please fill in all required fields');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'All Fields Required',
+                        text: 'Please fill in all required fields',
+                        confirmButtonColor: '#3498db',
+                        confirmButtonText: 'OK'
+                    });
                     return false;
                 }
             }
 
             if (!this.isValidEmail($('#dsf-email').val())) {
-                alert('Please enter a valid email');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Email',
+                    text: 'Please enter a valid email address',
+                    confirmButtonColor: '#3498db',
+                    confirmButtonText: 'OK'
+                });
                 return false;
             }
 
@@ -291,29 +335,82 @@
          */
         submitForm: function() {
             const self = this;
+            
+            // Prevent double submission
+            if (this.isSubmitting) {
+                return;
+            }
+            
+            this.isSubmitting = true;
             const formData = this.collectFormData();
             const ajaxData = {
                 action: 'dsf_submit_form',
                 nonce: dsfFrontend.nonce,
                 ...formData,
             };
-            $.ajax({
-                url: dsfFrontend.ajaxUrl,
-                type: 'POST',
-                data: ajaxData,
-                success: function(response) {
-                    if (response.success) {
-                        // Hide form and show success message
-                        // self.$form.hide();
-                        // $('.dsf-success-message').show();
-                        console.log('Form submitted successfully:', response.data);
-                    } else {
-                        alert(response.data.message || 'Error submitting form');
-                    }
-                },
-                error: function() {
-                    alert('Error submitting form. Please try again.');
-                },
+            
+            // Show loading dialog
+            Swal.fire({
+                title: 'Submitting Your Request',
+                html: '<div class="swal-loader"></div><p style="margin-top: 20px; color: #666;">Please wait while we process your submission...</p>',
+                icon: undefined,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: (modal) => {
+                    // Start AJAX call
+                    $.ajax({
+                        url: dsfFrontend.ajaxUrl,
+                        type: 'POST',
+                        data: ajaxData,
+                        success: function(response) {
+                            self.isSubmitting = false;
+                            if (response.success) {
+                                // Hide form and show success message
+                                self.$form.hide();
+                                $('.dsf-success-message').show();
+                                // Show success message
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success!',
+                                    html: '<p style="color: #555; line-height: 1.6;">Your service request has been submitted successfully!</p>' +
+                                          '<p style="font-size: 14px; margin-top: 15px; color: #888;"><strong>Submission ID:</strong> #' + response.data.submission_id + '</p>' +
+                                          '<p style="color: #888; font-size: 13px;">Our team will review your request and contact you soon.</p>',
+                                    confirmButtonColor: '#27ae60',
+                                    confirmButtonText: 'Close',
+                                    allowOutsideClick: false
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Reset form or redirect if needed
+                                        location.reload(); // or redirect to success page
+                                    }
+                                });
+                            } else {
+                                // Show error message
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Submission Failed',
+                                    html: '<p style="color: #555;">' + (response.data.message || 'An error occurred while submitting your form.') + '</p>',
+                                    confirmButtonColor: '#e74c3c',
+                                    confirmButtonText: 'Try Again'
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            self.isSubmitting = false;
+                            console.error('AJAX Error:', error);
+                            
+                            // Show connection error
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Connection Error',
+                                html: '<p style="color: #555;">Failed to submit your form. Please check your internet connection and try again.</p>',
+                                confirmButtonColor: '#e74c3c',
+                                confirmButtonText: 'Try Again'
+                            });
+                        }
+                    });
+                }
             });
         },
     };

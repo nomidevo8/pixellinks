@@ -248,13 +248,15 @@ class Form {
                     </div>
                 </div>
 
-                <!-- Success Message -->
-                <div class="dsf-success-message" style="display:none;">
-                    <div class="dsf-success-icon">✓</div>
-                    <h2><?php esc_html_e('Thank You!', 'dynamic-services-form'); ?></h2>
-                    <p><?php esc_html_e('Your form has been submitted successfully. We will be in touch shortly.', 'dynamic-services-form'); ?></p>
-                </div>
+            
             </form>
+
+                <!-- Success Message -->
+            <div class="dsf-success-message" style="display:none;">
+                <div class="dsf-success-icon">✓</div>
+                <h2><?php esc_html_e('Thank You!', 'dynamic-services-form'); ?></h2>
+                <p><?php esc_html_e('Your form has been submitted successfully. We will be in touch shortly.', 'dynamic-services-form'); ?></p>
+            </div>
         </div>
 
         <!-- Inline JavaScript for Form Handling -->
