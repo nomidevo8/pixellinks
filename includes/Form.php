@@ -329,7 +329,7 @@ class Form {
 
                 // Handle portal selection (for portal_based)
                 document.addEventListener('change', function(e) {
-                    if (e.target && e.target.name === 'portal_ids[]') {
+                    if (e.target && e.target.id === 'dsf-portal') {
                         updatePriceDisplay();
                     }
                 });
@@ -571,10 +571,11 @@ class Form {
              */
             function calculatePortalBased() {
                 var total = 0;
-                var portalCheckboxes = document.querySelectorAll('input[name="portal_ids[]"]:checked');
+                var portalSelect = document.getElementById('dsf-portal');
                 
-                for (var i = 0; i < portalCheckboxes.length; i++) {
-                    var price = parseFloat(portalCheckboxes[i].getAttribute('data-price') || 0);
+                if (portalSelect && portalSelect.value) {
+                    var selectedOption = portalSelect.options[portalSelect.selectedIndex];
+                    var price = parseFloat(selectedOption.getAttribute('data-price') || 0);
                     total += price;
                 }
 
