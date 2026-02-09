@@ -376,17 +376,22 @@ class Form {
                 html += '<select id="dsf-location" name="location_id" required>';
                 html += '<option value="">-- Select Location --</option>';
                 
-                if (service.locations && service.locations.length > 0) {
-                    for (var i = 0; i < service.locations.length; i++) {
-                        var location = service.locations[i];
-                        html += '<option value="' + escapeHtml(location.location_id) + '" ';
-                        html += 'data-location-name="' + escapeHtml(location.location_name) + '" ';
-                        html += 'data-standard-price="' + escapeHtml(location.standard_price || '') + '" ';
-                        html += 'data-premium-price="' + escapeHtml(location.premium_price || '') + '" ';
-                        html += 'data-is-universal="' + escapeHtml(location.is_universal || 0) + '">';
-                        html += escapeHtml(location.location_name);
-                        html += '</option>';
+                for (var i = 0; i < service.locations.length; i++) {
+                    var location = service.locations[i];
+
+                    // Decide display price (standard first)
+                    var priceLabel = '';
+                    if (location.standard_price && parseFloat(location.standard_price) > 0) {
+                        priceLabel = ' — $' + parseFloat(location.standard_price).toFixed(2);
                     }
+
+                    html += '<option value="' + escapeHtml(location.location_id) + '" ';
+                    html += 'data-location-name="' + escapeHtml(location.location_name) + '" ';
+                    html += 'data-standard-price="' + escapeHtml(location.standard_price || '') + '" ';
+                    html += 'data-premium-price="' + escapeHtml(location.premium_price || '') + '" ';
+                    html += 'data-is-universal="' + escapeHtml(location.is_universal || 0) + '">';
+                    html += escapeHtml(location.location_name) + priceLabel;
+                    html += '</option>';
                 }
                 
                 html += '</select></div>';
