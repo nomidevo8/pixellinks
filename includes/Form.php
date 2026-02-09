@@ -868,14 +868,19 @@ class Form {
 
         foreach ($services_data as $service) {
             $slug = sanitize_title($service['name']);
+
+            // Format label: kebab-case → Title Case
+            $label = ucwords(str_replace('-', ' ', $service['name']));
+
             echo '<option value="' . esc_attr($service['id']) . '" ';
             echo 'data-slug="' . esc_attr($slug) . '" ';
             echo 'data-pricing-model="' . esc_attr($service['pricing_model']) . '" ';
             echo 'data-has-packages="' . esc_attr($service['has_packages'] ? '1' : '0') . '">';
-            echo esc_html($service['name']);
+            echo esc_html($label);
             echo '</option>';
         }
     }
+
 
     /**
      * Get pricing options for a service
