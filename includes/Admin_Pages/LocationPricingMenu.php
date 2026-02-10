@@ -42,7 +42,7 @@ trait LocationPricingMenu {
         <div class="wrap">
             <h1>
                 <?php esc_html_e('Location Pricing', 'dynamic-services-form'); ?>
-                <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-pricing&action=add')); ?>" class="page-title-action">
+                <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-location-pricing&action=add')); ?>" class="page-title-action">
                     <?php esc_html_e('Add New', 'dynamic-services-form'); ?>
                 </a>
             </h1>
@@ -94,7 +94,7 @@ trait LocationPricingMenu {
                                 <td><?php echo !empty($pricing['premium_price']) ? '$' . number_format((float) $pricing['premium_price'], 2) : '--'; ?></td>
                                 <td><?php echo $pricing['enabled'] ? esc_html__('Enabled', 'dynamic-services-form') : esc_html__('Disabled', 'dynamic-services-form'); ?></td>
                                 <td>
-                                    <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-pricing&action=edit&id=' . $pricing['id'])); ?>">
+                                    <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-location-pricing&action=edit&id=' . $pricing['id'])); ?>">
                                         <?php esc_html_e('Edit', 'dynamic-services-form'); ?>
                                     </a> |
                                     <form method="post" style="display:inline;">
@@ -217,7 +217,7 @@ trait LocationPricingMenu {
                     <button type="submit" class="button button-primary">
                         <?php esc_html_e('Save Pricing', 'dynamic-services-form'); ?>
                     </button>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-pricing')); ?>" class="button">
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=dsf-location-pricing')); ?>" class="button">
                         <?php esc_html_e('Cancel', 'dynamic-services-form'); ?>
                     </a>
                 </p>
@@ -294,7 +294,7 @@ trait LocationPricingMenu {
         }
         
         ServiceLocationPricing::save($args);
-        wp_redirect(admin_url('admin.php?page=dsf-pricing'));
+        wp_redirect(admin_url('admin.php?page=dsf-location-pricing'));
         exit;
     }
 
@@ -306,7 +306,7 @@ trait LocationPricingMenu {
         if ($id) {
             ServiceLocationPricing::delete($id);
         }
-        wp_redirect(admin_url('admin.php?page=dsf-pricing'));
+        wp_redirect(admin_url('admin.php?page=dsf-location-pricing'));
         exit;
     }
 }

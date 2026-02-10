@@ -9,6 +9,7 @@ use DSF\Admin_Pages\LocationPricingMenu;
 use DSF\Admin_Pages\PortalsMenu;
 use DSF\Admin_Pages\SubmissionsMenu;
 use DSF\Admin_Pages\SettingsMenu;
+use DSF\Admin_Pages\Utils\DevDisplay;
 /**
  * Admin class for admin panel management
  *
@@ -27,6 +28,7 @@ class Admin {
     use PortalsMenu;
     use SubmissionsMenu;
     use SettingsMenu;
+    use DevDisplay;
     /**
      * Admin instance
      *
@@ -52,6 +54,7 @@ class Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'register_menu']);
         add_action('init', [$this, 'handle_form_submissions']);
+        add_action('wp_loaded', [$this, 'init_dev_display']);
     }
 
     /**
@@ -60,18 +63,38 @@ class Admin {
     public function register_menu() {
         // Main menu
         add_menu_page(
-            __('Dynamic Services', 'dynamic-services-form'),
-            __('Dynamic Services', 'dynamic-services-form'),
+            __('Submitted Applicants', 'dynamic-services-form'),
+            __('Submitted Applicants', 'dynamic-services-form'),
             'manage_options',
-            'dsf-services',
-            [$this, 'page_services'],
-            'dashicons-hammer',
+            'dsf-submit-services',
+            [$this, 'page_submissions'],
+            'dashicons-clipboard',
             30
         );
         
+        // Submissions submenu
+        add_submenu_page(
+            'dsf-submit-services',
+            __('Submissions', 'dynamic-services-form'),
+            __('Submissions', 'dynamic-services-form'),
+            'manage_options',
+            'dsf-submit-services',
+            [$this, 'page_submissions']
+        );
+        
+        // Settings submenu
+        add_submenu_page(
+            'dsf-submit-services',
+            __('Settings', 'dynamic-services-form'),
+            __('Settings', 'dynamic-services-form'),
+            'manage_options',
+            'dsf-settings',
+            [$this, 'page_settings']
+        );
+
         // Services submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Services', 'dynamic-services-form'),
             __('Services', 'dynamic-services-form'),
             'manage_options',
@@ -81,7 +104,7 @@ class Admin {
         
         // Packages submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Package Types', 'dynamic-services-form'),
             __('Package Types', 'dynamic-services-form'),
             'manage_options',
@@ -91,7 +114,7 @@ class Admin {
         
         // Service-Package Pricing submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Package Pricing', 'dynamic-services-form'),
             __('Package Pricing', 'dynamic-services-form'),
             'manage_options',
@@ -101,7 +124,7 @@ class Admin {
         
         // Locations submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Locations', 'dynamic-services-form'),
             __('Locations', 'dynamic-services-form'),
             'manage_options',
@@ -111,17 +134,17 @@ class Admin {
         
         // Service-Location Pricing submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Location Pricing', 'dynamic-services-form'),
             __('Location Pricing', 'dynamic-services-form'),
             'manage_options',
-            'dsf-pricing',
+            'dsf-location-pricing',
             [$this, 'page_location_pricing']
         );
         
         // Portals submenu
         add_submenu_page(
-            'dsf-services',
+            'dsf-submit-services',
             __('Portals', 'dynamic-services-form'),
             __('Portals', 'dynamic-services-form'),
             'manage_options',
@@ -129,25 +152,9 @@ class Admin {
             [$this, 'page_portals']
         );
         
-        // Submissions submenu
-        add_submenu_page(
-            'dsf-services',
-            __('Submissions', 'dynamic-services-form'),
-            __('Submissions', 'dynamic-services-form'),
-            'manage_options',
-            'dsf-submissions',
-            [$this, 'page_submissions']
-        );
-        
-        // Settings submenu
-        add_submenu_page(
-            'dsf-services',
-            __('Settings', 'dynamic-services-form'),
-            __('Settings', 'dynamic-services-form'),
-            'manage_options',
-            'dsf-settings',
-            [$this, 'page_settings']
-        );
+        $this->dev_display();
+
+
     }
 
     /**

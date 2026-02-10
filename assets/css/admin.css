@@ -263,3 +263,21 @@
         max-width: 100%;
     }
 }
+
+/* Dev Display Toggle Button */
+#wp-admin-bar-dsf-dev-display-toggle {
+    background-color: #fff8dc !important;
+    border-left: 3px solid #ff9800 !important;
+}
+
+#wp-admin-bar-dsf-dev-display-toggle > .ab-item,
+#wp-admin-bar-dsf-dev-display-toggle .ab-item {
+    color: #333 !important;
+    font-weight: 600;
+}
+
+#wp-admin-bar-dsf-dev-display-toggle:hover > .ab-item,
+#wp-admin-bar-dsf-dev-display-toggle:hover .ab-item {
+    color: #ff9800 !important;
+    background-color: #fffbf0 !important;
+}
