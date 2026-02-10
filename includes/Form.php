@@ -251,6 +251,157 @@ class Form {
             </div>
         </div>
 
+        <!-- Styles for Searchable Select -->
+        <style>
+            /* Searchable Select Styling */
+            .dsf-select-wrapper {
+                position: relative;
+                display: block;
+                width: 100%;
+            }
+
+            .dsf-select-wrapper select {
+                width: 100%;
+                padding: 12px 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 6px;
+                background: #fff;
+                font-size: 14px;
+                font-family: inherit;
+                cursor: pointer;
+                appearance: none;
+                transition: all 0.3s ease;
+                padding-right: 40px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%231a9b8e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 14px;
+                z-index: 1;
+                position: relative;
+            }
+
+            .dsf-select-wrapper select:hover {
+                border-color: #1a9b8e;
+                box-shadow: 0 2px 8px rgba(26, 155, 142, 0.1);
+            }
+
+            .dsf-select-wrapper select:focus {
+                outline: none;
+                border-color: #1a9b8e;
+                box-shadow: 0 0 0 3px rgba(26, 155, 142, 0.1);
+            }
+
+            /* Custom Dropdown - Inline style */
+            .dsf-select-dropdown-wrapper {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 2px solid #1a9b8e;
+                border-top: none;
+                border-radius: 0 0 6px 6px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+                z-index: 9999;
+                display: none;
+                max-height: 400px;
+                flex-direction: column;
+                margin-top: -2px;
+            }
+
+            .dsf-select-dropdown-wrapper.active {
+                display: flex;
+            }
+
+            .dsf-select-search {
+                padding: 12px 15px;
+                border-bottom: 1px solid #e0e0e0;
+                background: #fafafa;
+                flex-shrink: 0;
+            }
+
+            .dsf-select-search input {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                font-size: 14px;
+                font-family: inherit;
+                transition: all 0.2s ease;
+                box-sizing: border-box;
+            }
+
+            .dsf-select-search input:focus {
+                outline: none;
+                border-color: #1a9b8e;
+                box-shadow: inset 0 0 0 2px rgba(26, 155, 142, 0.1);
+            }
+
+            .dsf-select-options {
+                flex: 1;
+                overflow-y: auto;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .dsf-select-options::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .dsf-select-options::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            .dsf-select-options::-webkit-scrollbar-thumb {
+                background: #1a9b8e;
+                border-radius: 3px;
+            }
+
+            .dsf-select-options::-webkit-scrollbar-thumb:hover {
+                background: #158076;
+            }
+
+            .dsf-select-option {
+                padding: 11px 15px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border-bottom: 1px solid #f5f5f5;
+                color: #2c3e50;
+                font-size: 14px;
+            }
+
+            .dsf-select-option:hover {
+                background: #f0f8f6;
+                color: #1a9b8e;
+                padding-left: 18px;
+            }
+
+            .dsf-select-option.selected {
+                background: #e8f5f3;
+                color: #1a9b8e;
+                font-weight: 500;
+                border-left: 3px solid #1a9b8e;
+                padding-left: 15px;
+            }
+
+            .dsf-select-option.hidden {
+                display: none;
+            }
+
+            .dsf-select-option:last-child {
+                border-bottom: none;
+            }
+
+            .dsf-select-no-results {
+                padding: 30px 15px;
+                text-align: center;
+                color: #7f8c8d;
+                font-size: 14px;
+                border-bottom: none;
+            }
+        </style>
+
         <!-- Inline JavaScript for Form Handling -->
         <script type="text/javascript">
         (function() {
@@ -264,6 +415,9 @@ class Form {
             }
 
             function initForm() {
+                // Initialize searchable selects
+                initSearchableSelects();
+
                 // Handle service selection change
                 var serviceSelect = document.getElementById('dsf-service-select');
                 if (serviceSelect) {
@@ -328,6 +482,204 @@ class Form {
             }
 
             /**
+             * Initialize searchable select functionality for all select elements
+             */
+            function initSearchableSelects() {
+                var selects = document.querySelectorAll('select');
+                
+                selects.forEach(function(selectElement) {
+                    // Skip if already initialized
+                    if (selectElement.dataset.searchable === 'true') return;
+                    
+                    selectElement.dataset.searchable = 'true';
+                    
+                    // Wrap select in a container if not already wrapped
+                    if (!selectElement.parentElement.classList.contains('dsf-select-wrapper')) {
+                        var wrapper = document.createElement('div');
+                        wrapper.className = 'dsf-select-wrapper';
+                        selectElement.parentNode.insertBefore(wrapper, selectElement);
+                        wrapper.appendChild(selectElement);
+                    }
+                    
+                    // Handle select click to show dropdown
+                    selectElement.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Close any open dropdowns
+                        closeAllSelects();
+                        
+                        // Show this dropdown
+                        showSelectDropdown(selectElement);
+                    });
+                });
+            }
+
+            /**
+             * Close all open select dropdowns
+             */
+            function closeAllSelects() {
+                var openDropdowns = document.querySelectorAll('.dsf-select-dropdown-wrapper.active');
+                openDropdowns.forEach(function(dropdown) {
+                    dropdown.classList.remove('active');
+                    setTimeout(function() {
+                        if (dropdown.parentElement) {
+                            dropdown.parentElement.removeChild(dropdown);
+                        }
+                    }, 200);
+                });
+            }
+
+            /**
+             * Show searchable select dropdown
+             */
+            function showSelectDropdown(selectElement) {
+                var wrapper = selectElement.parentElement;
+                var options = selectElement.querySelectorAll('option');
+                
+                // Create dropdown wrapper
+                var dropdownWrapper = document.createElement('div');
+                dropdownWrapper.className = 'dsf-select-dropdown-wrapper';
+                
+                // Search input
+                var searchDiv = document.createElement('div');
+                searchDiv.className = 'dsf-select-search';
+                var searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.placeholder = 'Search...';
+                searchInput.className = 'dsf-select-search-input';
+                searchDiv.appendChild(searchInput);
+                dropdownWrapper.appendChild(searchDiv);
+                
+                // Options list
+                var optionsList = document.createElement('ul');
+                optionsList.className = 'dsf-select-options';
+                
+                options.forEach(function(option, index) {
+                    if (!option.value && option.text) {
+                        // Create label item for non-value options
+                        var label = document.createElement('li');
+                        label.className = 'dsf-select-option';
+                        label.textContent = option.text;
+                        label.style.fontWeight = '600';
+                        label.style.cursor = 'default';
+                        label.style.color = '#1a9b8e';
+                        label.style.pointerEvents = 'none';
+                        label.style.paddingTop = '8px';
+                        label.style.paddingBottom = '8px';
+                        optionsList.appendChild(label);
+                    } else if (option.value) {
+                        // Create selectable option
+                        var li = document.createElement('li');
+                        li.className = 'dsf-select-option';
+                        li.textContent = option.text;
+                        li.dataset.value = option.value;
+                        li.dataset.index = index;
+                        
+                        if (selectElement.value === option.value) {
+                            li.classList.add('selected');
+                        }
+                        
+                        li.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectElement.value = option.value;
+                            closeSelectDropdown(dropdownWrapper);
+                            
+                            // Trigger change event
+                            if (selectElement.dispatchEvent) {
+                                var changeEvent = new Event('change', { bubbles: true });
+                                selectElement.dispatchEvent(changeEvent);
+                            }
+                        });
+                        
+                        optionsList.appendChild(li);
+                    }
+                });
+                
+                dropdownWrapper.appendChild(optionsList);
+                
+                // Add dropdown to wrapper
+                wrapper.appendChild(dropdownWrapper);
+                
+                // Trigger active state with slight delay for animation
+                setTimeout(function() {
+                    dropdownWrapper.classList.add('active');
+                }, 10);
+                
+                // Focus search input
+                setTimeout(function() {
+                    searchInput.focus();
+                }, 50);
+                
+                // Handle search
+                searchInput.addEventListener('input', function(e) {
+                    var searchTerm = e.target.value.toLowerCase();
+                    var items = optionsList.querySelectorAll('.dsf-select-option');
+                    var visibleCount = 0;
+                    
+                    items.forEach(function(item) {
+                        // Skip label items
+                        if (item.style.pointerEvents === 'none') {
+                            return;
+                        }
+                        
+                        var text = item.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            item.classList.remove('hidden');
+                            visibleCount++;
+                        } else {
+                            item.classList.add('hidden');
+                        }
+                    });
+                    
+                    // Show no results message
+                    var noResults = optionsList.querySelector('.dsf-select-no-results');
+                    if (visibleCount === 0) {
+                        if (!noResults) {
+                            noResults = document.createElement('li');
+                            noResults.className = 'dsf-select-no-results';
+                            noResults.textContent = 'No results found';
+                            optionsList.appendChild(noResults);
+                        }
+                    } else {
+                        if (noResults) {
+                            noResults.remove();
+                        }
+                    }
+                });
+                
+                // Close on Escape key
+                var escapeHandler = function(e) {
+                    if (e.key === 'Escape') {
+                        closeSelectDropdown(dropdownWrapper);
+                        document.removeEventListener('keydown', escapeHandler);
+                    }
+                };
+                document.addEventListener('keydown', escapeHandler);
+                
+                // Close when clicking outside
+                var outsideHandler = function(e) {
+                    if (!wrapper.contains(e.target)) {
+                        closeSelectDropdown(dropdownWrapper);
+                        document.removeEventListener('click', outsideHandler);
+                    }
+                };
+                document.addEventListener('click', outsideHandler);
+            }
+
+            /**
+             * Close select dropdown
+             */
+            function closeSelectDropdown(dropdownWrapper) {
+                dropdownWrapper.classList.remove('active');
+                setTimeout(function() {
+                    if (dropdownWrapper.parentElement) {
+                        dropdownWrapper.parentElement.removeChild(dropdownWrapper);
+                    }
+                }, 200);
+            }
+
+            /**
              * Render pricing options based on service pricing model
              */
             function renderPricingOptions(service) {
@@ -351,6 +703,12 @@ class Form {
                 }
 
                 document.getElementById('dsf-pricing-options-container').innerHTML = html;
+                
+                // Reinitialize searchable selects for newly created elements
+                setTimeout(function() {
+                    initSearchableSelects();
+                }, 100);
+                
                 resetPriceDisplay();
             }
 
