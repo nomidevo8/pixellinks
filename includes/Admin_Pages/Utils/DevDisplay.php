@@ -105,7 +105,7 @@ trait DevDisplay
 
         $wp_admin_bar->add_menu([
             'id' => 'dsf-dev-display-toggle',
-            'title' => __('🔧 Dev Display Active (' . $this->dev_display_expiration . ' min)', 'dynamic-services-form'),
+            'title' => __('🔧 Dev Display Active (' . $this->dev_display_expiration . ' sec)', 'dynamic-services-form'),
             'href' => $clear_url,
             'meta' => [
                 'class' => 'dsf-dev-display-active',
