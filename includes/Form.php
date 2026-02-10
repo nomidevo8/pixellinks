@@ -261,23 +261,10 @@ class Form {
             }
 
             .dsf-select-wrapper select {
-                width: 100%;
-                padding: 12px 15px;
-                border: 2px solid #e0e0e0;
-                border-radius: 6px;
-                background: #fff;
-                font-size: 14px;
-                font-family: inherit;
-                cursor: pointer;
-                appearance: none;
-                transition: all 0.3s ease;
-                padding-right: 40px;
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%231a9b8e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;
                 background-position: right 12px center;
                 background-size: 14px;
-                z-index: 1;
-                position: relative;
             }
 
             .dsf-select-wrapper select:hover {
@@ -502,7 +489,7 @@ class Form {
                     }
                     
                     // Handle select click to show dropdown
-                    selectElement.addEventListener('click', function(e) {
+                    selectElement.addEventListener('mousedown', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
