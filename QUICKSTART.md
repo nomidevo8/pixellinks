@@ -61,7 +61,6 @@ If parameters match an active service the selection step will be skipped.
 ## Admin & Next steps
 
 - View submissions under **Dynamic Services** → **Submissions**.
-- Test the form with sample/demo data (see `includes/sample-data.php`).
 - Customize styles in `assets/css/form.css`.
 
 ---

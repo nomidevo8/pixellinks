@@ -65,9 +65,6 @@ class Plugin {
         // Initialize database
         Database::instance();
         
-        // Load sample data initialization
-        require_once DSF_PLUGIN_DIR . 'includes/sample-data.php';
-        
         // Initialize admin if in admin area
         if (is_admin()) {
             Admin::instance();
