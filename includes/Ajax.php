@@ -31,171 +31,13 @@ class Ajax {
      * Constructor
      */
     public function __construct() {
-        // Register AJAX actions for public/authenticated users
-        add_action('wp_ajax_dsf_get_pricing_options', [$this, 'get_pricing_options']);
-        add_action('wp_ajax_nopriv_dsf_get_pricing_options', [$this, 'get_pricing_options']);
-        
-        add_action('wp_ajax_dsf_calculate_price', [$this, 'calculate_price']);
-        add_action('wp_ajax_nopriv_dsf_calculate_price', [$this, 'calculate_price']);
         
         add_action('wp_ajax_dsf_submit_form', [$this, 'submit_form']);
         add_action('wp_ajax_nopriv_dsf_submit_form', [$this, 'submit_form']);
         
-        add_action('wp_ajax_dsf_get_review_summary', [$this, 'get_review_summary']);
-        add_action('wp_ajax_nopriv_dsf_get_review_summary', [$this, 'get_review_summary']);
-        
         add_action('wp_ajax_dsf_get_submission_details', [$this, 'get_submission_details']);
         
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
-    }
-
-    /**
-     * Get pricing options for a service
-     */
-    public function get_pricing_options() {
-        check_ajax_referer('dsf_form_nonce', 'nonce');
-        
-        $service_id = isset($_POST['service_id']) ? intval($_POST['service_id']) : 0;
-        
-        if (!$service_id) {
-            wp_send_json_error(['message' => 'Service not found']);
-        }
-        
-        $service = new Service($service_id);
-        if (!$service->get_id()) {
-            wp_send_json_error(['message' => 'Service not found']);
-        }
-        
-        $options = Form::get_pricing_options($service->get_id());
-        wp_send_json_success($options);
-    }
-
-    /**
-     * Calculate total price based on form inputs
-     */
-    public function calculate_price() {
-        check_ajax_referer('dsf_form_nonce', 'nonce');
-        
-        $service_id = isset($_POST['service_id']) ? intval($_POST['service_id']) : 0;
-        $location_id = isset($_POST['location_id']) ? intval($_POST['location_id']) : 0;
-        $package_id = isset($_POST['package_id']) ? intval($_POST['package_id']) : 0;
-        $portal_id = isset($_POST['portal_id']) ? intval($_POST['portal_id']) : 0;
-        $calculator_amount = isset($_POST['calculator_amount']) ? floatval($_POST['calculator_amount']) : 0;
-        
-        $service = new Service($service_id);
-        if (!$service->get_id()) {
-            wp_send_json_error(['message' => 'Service not found']);
-        }
-        
-        $total_price = 0;
-        $price_label = 'Service Fee';
-        $pricing_model = $service->get('pricing_model');
-        
-        switch ($pricing_model) {
-            case 'state_based':
-                if ($location_id) {
-                    $location = new Location($location_id);
-                    if ($location->get_id()) {
-                        $price_label = $location->get('name');
-                    }
-                    
-                    if ($service->get('has_packages') && $package_id) {
-                        // Package pricing model: get price from ServicePackagePricing
-                        $package_pricing = ServicePackagePricing::get_by_service_and_package_type($service->get_id(), $package_id);
-                        if ($package_pricing) {
-                            $total_price = floatval($package_pricing['price'] ?? 0);
-                            $price_label = $package_pricing['package_type_name'] ?? 'Package';
-                        }
-                    } else {
-                        // No packages: use location-based pricing (universal or standard tier)
-                        $pricing = ServiceLocationPricing::get_by_service_and_location($service->get_id(), $location_id);
-                        if ($pricing) {
-                            $total_price = floatval($pricing['standard_price'] ?? 0);
-                            $price_label = $pricing['location_name'] ?? 'Service Fee';
-                        }
-                    }
-                }
-                break;
-                
-            case 'portal_based':
-                $portal_id = isset($_POST['portal_id']) ? intval($_POST['portal_id']) : 0;
-                if ($portal_id) {
-                    $portal = new Portal($portal_id);
-                    if ($portal->get_id()) {
-                        $total_price = floatval($portal->get('price') ?? 0);
-                        $price_label = $portal->get('portal_name') ?? 'Portal Fee';
-                    }
-                }
-                break;
-                
-            case 'fixed_price':
-                // Get fixed price from service configuration
-                $fixed_price = $service->get('fixed_price') ?? 0;
-                $total_price = floatval($fixed_price);
-                $price_label = 'Fixed Price';
-                break;
-                
-            case 'calculator':
-                // Calculator with tiered pricing
-                $total_price = $this->calculate_tiered_price($calculator_amount);
-                $price_label = 'Calculated Fee';
-                break;
-        }
-        
-        wp_send_json_success([
-            'total_price' => round($total_price, 2),
-            'price_label' => $price_label,
-        ]);
-    }
-
-    /**
-     * Get review summary
-     */
-    public function get_review_summary() {
-        check_ajax_referer('dsf_form_nonce', 'nonce');
-        
-        $form_data = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : [];
-        
-        // Parse form data
-        $service_id = isset($form_data['service_id']) ? intval($form_data['service_id']) : 0;
-        
-        $service = new Service($service_id);
-        if (!$service->get_id()) {
-            wp_send_json_error(['message' => 'Service not found']);
-        }
-        
-        ob_start();
-        ?>
-        <div class="dsf-review-item">
-            <h3><?php esc_html_e('Selected Service', 'dynamic-services-form'); ?></h3>
-            <p>
-                <strong><?php echo esc_html($service->get('type')); ?> - <?php echo esc_html($service->get('category')); ?></strong><br>
-                <?php echo esc_html($service->get('name')); ?>
-            </p>
-        </div>
-        
-        <div class="dsf-review-item">
-            <h3><?php esc_html_e('Pricing Details', 'dynamic-services-form'); ?></h3>
-            <div id="dsf-pricing-details"></div>
-        </div>
-        
-        <div class="dsf-review-item">
-            <h3><?php esc_html_e('Contact Information', 'dynamic-services-form'); ?></h3>
-            <p>
-                <strong><?php esc_html_e('Business Name:', 'dynamic-services-form'); ?></strong> 
-                <span><?php echo isset($form_data['business_name']) ? esc_html($form_data['business_name']) : '--'; ?></span><br>
-                <strong><?php esc_html_e('Email:', 'dynamic-services-form'); ?></strong> 
-                <span><?php echo isset($form_data['email']) ? esc_html($form_data['email']) : '--'; ?></span><br>
-                <strong><?php esc_html_e('Phone:', 'dynamic-services-form'); ?></strong> 
-                <span><?php echo isset($form_data['phone']) ? esc_html($form_data['phone']) : '--'; ?></span><br>
-                <!-- Entity Type removed -->
-            </p>
-        </div>
-        <?php
-        
-        wp_send_json_success([
-            'html' => ob_get_clean(),
-        ]);
     }
 
     /**
@@ -365,6 +207,56 @@ class Ajax {
         .footer { background: #34495e; padding: 20px; text-align: center; font-size: 12px; color: white; border-radius: 0 0 8px 8px; }
         .footer-link { color: #3498db; text-decoration: none; }
         .action-button { display: inline-block; background: #3498db; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-top: 10px; font-size: 13px; }
+        /* Mobile-friendly stacked tables + wrapping */
+        @media only screen and (max-width: 600px) {
+
+            .info-table,
+            .info-table tbody,
+            .info-table tr,
+            .info-table td {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            .info-table tr {
+                margin-bottom: 14px;
+                border-bottom: 1px solid #ecf0f1;
+                padding-bottom: 10px;
+            }
+
+            .info-table td {
+                box-sizing: border-box;
+                word-wrap: break-word;
+                word-break: break-word;
+                overflow-wrap: anywhere;
+                white-space: normal;
+            }
+
+            /* Label */
+            .info-table td:first-child {
+                background: none !important;
+                font-weight: 700;
+                color: #2c3e50;
+                padding-bottom: 4px;
+                border-bottom: none;
+            }
+
+            /* Value */
+            .info-table td:last-child {
+                padding-top: 0;
+                color: #333;
+            }
+
+            /* Fix long links (email, phone, URLs) */
+            .info-table a {
+                word-break: break-all;
+                white-space: normal;
+                display: inline-block;
+                max-width: 100%;
+            }
+        }
+
     </style>
 </head>
 <body style="background-color: #ecf0f1; margin: 0; padding: 20px;">
