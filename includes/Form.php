@@ -770,7 +770,7 @@ class Form {
              * Render portal-based pricing HTML
              */
             function renderPortalBased(service) {
-                var html = '<div class="dsf-field-group dsf-field-portal">';
+                var html = '<div class="dsf-field-group dsf-field-portals">';
                 html += '<label for="dsf-portal">Select Portal <span class="dsf-required">*</span></label>';
                 html += '<select id="dsf-portal" name="portal_id">';
                 html += '<option value="">-- Select Portal --</option>';

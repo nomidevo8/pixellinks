@@ -1097,8 +1097,11 @@ h2#swal2-title {
 
 .dsf-pricing-options-container{
     position: relative !important; 
-z-index: 98;}
+    z-index: 98;}
+.dsf-field-states, .dsf-field-portals {
+    z-index: 99;
+}
 
 .dsf-field-service{
-    z-index: 99;
+    z-index: 999;
 }
