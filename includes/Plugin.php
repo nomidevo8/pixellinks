@@ -138,8 +138,6 @@ class Plugin {
 
         // Load only on Dynamic Services pages (main + all submenus)
         if (strpos($screen->id, 'dsf') === false) {
-            // Debug (optional)
-       
             return;
         }
 
