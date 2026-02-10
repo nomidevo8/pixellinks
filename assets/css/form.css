@@ -1084,6 +1084,21 @@ h2#swal2-title {
     line-height: 1.4;
 }
 
+
 .dsf-field-group {
     position: relative;
+}
+
+.dsf-select-wrapper{
+    @media (max-width: 768px) {
+        z-index: 99;
+    }
+}
+
+.dsf-pricing-options-container{
+    position: relative !important; 
+z-index: 98;}
+
+.dsf-field-service{
+    z-index: 99;
 }

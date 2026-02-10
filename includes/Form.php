@@ -106,7 +106,7 @@ class Form {
                     <h2 class="dsf-step-title"><?php esc_html_e('Select Your Service & Pricing', 'dynamic-services-form'); ?></h2>
                     
                     <!-- Service Dropdown -->
-                    <div class="dsf-field-group">
+                    <div class="dsf-field-group dsf-field-service">
                         <label for="dsf-service-select">
                             <?php esc_html_e('Service', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                         </label>
@@ -703,7 +703,7 @@ class Form {
              * Render state-based pricing HTML
              */
             function renderStateBased(service) {
-                var html = '<div class="dsf-field-group">';
+                var html = '<div class="dsf-field-group dsf-field-states">';
                 html += '<label for="dsf-location">Location / State <span class="dsf-required">*</span></label>';
                 html += '<select id="dsf-location" name="location_id">';
                 html += '<option value="">-- Select Location --</option>';
@@ -770,7 +770,7 @@ class Form {
              * Render portal-based pricing HTML
              */
             function renderPortalBased(service) {
-                var html = '<div class="dsf-field-group">';
+                var html = '<div class="dsf-field-group dsf-field-portal">';
                 html += '<label for="dsf-portal">Select Portal <span class="dsf-required">*</span></label>';
                 html += '<select id="dsf-portal" name="portal_id">';
                 html += '<option value="">-- Select Portal --</option>';
