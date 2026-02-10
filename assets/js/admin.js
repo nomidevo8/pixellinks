@@ -17,7 +17,6 @@
          * Bind event handlers
          */
         bindEvents: function() {
-            // Auto-update pricing model dependent fields
             $(document).on('change', '#pricing_model', function() {
                 const model = $(this).val();
                 const $hasPackages = $('#has_packages').closest('tr');

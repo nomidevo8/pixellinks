@@ -1,5 +1,7 @@
 # Dynamic Services Form Plugin - Customization Examples
 
+This file contains code snippets and examples for customizing behavior, integrations, and hooks. Examples assume the plugin is active and the `dsf_form_submitted` action and `dsf_calculate_total_price` filter are available.
+
 ## Code Examples for Common Tasks
 
 ### 1. Send Email on Form Submission

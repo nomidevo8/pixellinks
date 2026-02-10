@@ -1,8 +1,6 @@
 /**
  * Dynamic Services Form - Frontend JavaScript
  * 2-Step Workflow: Service + Pricing -> Contact Info
- * Note: Service selection and pricing are now handled inline in Form.php
- * Includes beautiful loaders and notifications with SweetAlert2
  */
 
 (function($) {
@@ -48,7 +46,6 @@
             });
 
             // Form submission
-            // Form submission (Step 2 validation)
             this.$form.on('submit', function(e) {
                 e.preventDefault();
                 // Always validate step 2 on submit
@@ -118,7 +115,7 @@
         validateStep: function(step) {
             let isValid = true;
             switch (step) {
-                case 1: // Service + Pricing
+                case 1: 
                     if (!$('#dsf-service-select').val()) {
                         Swal.fire({
                             icon: 'warning',
@@ -133,7 +130,7 @@
                     }
                     break;
 
-                case 2: // Contact information
+                case 2: 
                     if (!this.validateContactInfo()) {
                         isValid = false;
                     }
@@ -254,7 +251,6 @@
                 const value = $('#dsf-' + field.replace(/_/g, '-')).val().trim();
 
                 if (!value) {
-                    // Use custom message if defined, otherwise fallback
                     const message = fieldMessages[field] || 'This field is required';
                     this.showFieldError(field, message);
                     isValid = false;
@@ -415,7 +411,6 @@
                     break;
 
                 case 'fixed_price':
-                    // Fixed price doesn't need additional data
                     break;
             }
 
@@ -450,7 +445,6 @@
                 allowEscapeKey: false,
                 showConfirmButton: false,
                 didOpen: (modal) => {
-                    // Start AJAX call
                     $.ajax({
                         url: dsfFrontend.ajaxUrl,
                         type: 'POST',
@@ -458,10 +452,8 @@
                         success: function(response) {
                             self.isSubmitting = false;
                             if (response.success) {
-                                // Hide form and show success message
                                 self.$form.hide();
                                 $('.dsf-success-message').show();
-                                // Show success message
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success!',
@@ -473,8 +465,7 @@
                                     allowOutsideClick: false
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        // Reset form or redirect if needed
-                                        location.reload(); // or redirect to success page
+                                        location.reload(); 
                                     }
                                 });
                             } else {

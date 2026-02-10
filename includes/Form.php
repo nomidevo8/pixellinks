@@ -260,6 +260,23 @@ class Form {
                 width: 100%;
             }
 
+            .dsf-select-wrapper{
+                @media (max-width: 768px) {
+                    z-index: 99;
+                }
+            }
+
+            .dsf-pricing-options-container{
+                position: relative !important; 
+                z-index: 98;}
+            .dsf-field-states, .dsf-field-portals {
+                z-index: 99;
+            }
+
+            .dsf-field-service{
+                z-index: 999;
+            }
+
             .dsf-select-wrapper select {
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%231a9b8e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
                 background-repeat: no-repeat;

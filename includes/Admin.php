@@ -31,10 +31,7 @@ class Admin {
      * Constructor
      */
     public function __construct() {
-        // Register admin menu
         add_action('admin_menu', [$this, 'register_menu']);
-        
-        // Handle form submissions
         add_action('init', [$this, 'handle_form_submissions']);
     }
 
