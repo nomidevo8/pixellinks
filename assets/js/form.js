@@ -48,16 +48,64 @@
             });
 
             // Form submission
+            // Form submission (Step 2 validation)
             this.$form.on('submit', function(e) {
                 e.preventDefault();
+                // Always validate step 2 on submit
+                const step = parseInt(
+                    self.$form.find('.dsf-step:visible').data('step'),
+                    10
+                );
+
+                if (!self.validateStep(step)) {
+                    return; 
+                }
+
                 self.submitForm();
             });
+            // Clear errors on input
+            $(document).on('input change', '.dsf-step-2 input, .dsf-step-2 textarea', function() {
+                const fieldId = $(this).attr('id').replace('dsf-', '');
+                DSFForm.clearFieldError(fieldId);
+            });
         },
+
+        /**
+         * Show inline error below a field
+         */
+        showFieldError: function(fieldId, message) {
+            const $input = $('#dsf-' + fieldId.replace(/_/g, '-'));
+            const $group = $input.closest('.dsf-field-group');
+
+            // Remove existing error
+            $group.find('.dsf-error-message').remove();
+
+            $group.addClass('dsf-has-error');
+            $input.addClass('dsf-input-error');
+
+            $group.append(
+                '<div class="dsf-error-message">' + message + '</div>'
+            );
+        },
+
+        /**
+         * Clear error from a field
+         */
+        clearFieldError: function(fieldId) {
+            const $input = $('#dsf-' + fieldId.replace(/_/g, '-'));
+            const $group = $input.closest('.dsf-field-group');
+
+            $group.removeClass('dsf-has-error');
+            $input.removeClass('dsf-input-error');
+            $group.find('.dsf-error-message').remove();
+        },
+
 
         /**
          * Validate current step and move to next
          */
         validateAndMoveNext: function(step) {
+            console.log('step', step);
             if (!this.validateStep(step)) {
                 return;
             }
@@ -69,7 +117,6 @@
          */
         validateStep: function(step) {
             let isValid = true;
-
             switch (step) {
                 case 1: // Service + Pricing
                     if (!$('#dsf-service-select').val()) {
@@ -102,7 +149,6 @@
         validatePricingStep: function() {
             const pricingModel =
                     $('#dsf-pricing-options-container').attr('data-pricing-model') || null;
-            console.log('pricingModel' , pricingModel)
             switch (pricingModel) {
                 case 'state_based':
                     if (!$('#dsf-location').val()) {
@@ -141,16 +187,28 @@
                     break;
 
                 case 'calculator':
-                    if (!$('#dsf-calculator-amount').val() || $('#dsf-calculator-amount').val() <= 0) {
+                    const amount = parseFloat($('#dsf-calculator-amount').val());
+
+                    if (isNaN(amount) || amount <= 0) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'Valid Amount Required',
                             text: 'Please enter a valid amount',
-                            confirmButtonColor: '#3498db',
-                            confirmButtonText: 'OK'
+                            confirmButtonColor: '#3498db'
                         });
                         return false;
                     }
+
+                    if (amount < 350000) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Minimum Amount Required',
+                            text: 'The minimum allowed amount is $350,000.',
+                            confirmButtonColor: '#e74c3c'
+                        });
+                        return false;
+                    }
+
                     break;
             }
 
@@ -161,34 +219,68 @@
          * Validate contact information
          */
         validateContactInfo: function() {
-            const requiredFields = ['first_name', 'last_name', 'business_name', 'business_address', 'city', 'state', 'zipcode', 'email', 'phone'];
-            
+            let isValid = true;
+
+            const requiredFields = [
+                'first_name',
+                'last_name',
+                'business_name',
+                'business_address',
+                'city',
+                'state',
+                'zipcode',
+                'email',
+                'phone'
+            ];
+
+            // Custom messages for each field
+            const fieldMessages = {
+                first_name: 'Please enter your First Name',
+                last_name: 'Please enter your Last Name',
+                business_name: 'Please enter your Business Name',
+                business_address: 'Please enter your Business Address',
+                city: 'Please enter your City',
+                state: 'Please enter your State',
+                zipcode: 'Please enter your Zipcode',
+                email: 'Please enter a valid Email Address',
+                phone: 'Please enter your Phone Number'
+            };
+
+            // Clear old errors first
+            requiredFields.forEach(field => this.clearFieldError(field));
+
+            // Required fields
             for (let field of requiredFields) {
                 const value = $('#dsf-' + field.replace(/_/g, '-')).val().trim();
+
                 if (!value) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'All Fields Required',
-                        text: 'Please fill in all required fields',
-                        confirmButtonColor: '#3498db',
-                        confirmButtonText: 'OK'
-                    });
-                    return false;
+                    // Use custom message if defined, otherwise fallback
+                    const message = fieldMessages[field] || 'This field is required';
+                    this.showFieldError(field, message);
+                    isValid = false;
                 }
             }
 
-            if (!this.isValidEmail($('#dsf-email').val())) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Invalid Email',
-                    text: 'Please enter a valid email address',
-                    confirmButtonColor: '#3498db',
-                    confirmButtonText: 'OK'
-                });
-                return false;
+            // Email validation (extra check)
+            const emailVal = $('#dsf-email').val().trim();
+            if (emailVal && !this.isValidEmail(emailVal)) {
+                this.showFieldError('email', 'Please enter a valid email address');
+                isValid = false;
             }
 
-            return true;
+            if (!isValid) {
+                const $firstError = $('.dsf-step:visible .dsf-has-error').first();
+
+                if ($firstError.length) {
+                    $('html, body').animate({
+                        scrollTop: $firstError.offset().top - 120
+                    }, 400);
+
+                    $firstError.find('input, textarea').first().focus();
+                }
+            }
+
+            return isValid;
         },
 
         /**

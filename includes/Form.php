@@ -110,7 +110,7 @@ class Form {
                         <label for="dsf-service-select">
                             <?php esc_html_e('Service', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                         </label>
-                        <select id="dsf-service-select" name="service_id" required>
+                        <select id="dsf-service-select" name="service_id">
                             <option value=""><?php esc_html_e('-- Select a Service --', 'dynamic-services-form'); ?></option>
                             <?php $this->render_filtered_service_options($services_data); ?>
                         </select>
@@ -155,14 +155,14 @@ class Form {
                             <label for="dsf-first-name">
                                 <?php esc_html_e('First Name', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-first-name" name="first_name" required>
+                            <input type="text" id="dsf-first-name" name="first_name">
                         </div>
                         
                         <div class="dsf-field-group dsf-field-6">
                             <label for="dsf-last-name">
                                 <?php esc_html_e('Last Name', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-last-name" name="last_name" required>
+                            <input type="text" id="dsf-last-name" name="last_name">
                         </div>
 
                         <!-- Business Name -->
@@ -170,7 +170,7 @@ class Form {
                             <label for="dsf-business-name">
                                 <?php esc_html_e('Business Name', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-business-name" name="business_name" required>
+                            <input type="text" id="dsf-business-name" name="business_name">
                         </div>
 
                         <!-- Business Address -->
@@ -178,7 +178,7 @@ class Form {
                             <label for="dsf-business-address">
                                 <?php esc_html_e('Business Address', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-business-address" name="business_address" required>
+                            <input type="text" id="dsf-business-address" name="business_address">
                         </div>
 
                         <!-- City, State, Zipcode Row -->
@@ -186,21 +186,21 @@ class Form {
                             <label for="dsf-city">
                                 <?php esc_html_e('City', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-city" name="city" required>
+                            <input type="text" id="dsf-city" name="city">
                         </div>
 
                         <div class="dsf-field-group dsf-field-4">
                             <label for="dsf-state">
                                 <?php esc_html_e('State', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-state" name="state" required>
+                            <input type="text" id="dsf-state" name="state">
                         </div>
 
                         <div class="dsf-field-group dsf-field-4">
                             <label for="dsf-zipcode">
                                 <?php esc_html_e('Zipcode', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="text" id="dsf-zipcode" name="zipcode" required>
+                            <input type="text" id="dsf-zipcode" name="zipcode">
                         </div>
 
                         <!-- Email & Phone Row -->
@@ -208,14 +208,14 @@ class Form {
                             <label for="dsf-email">
                                 <?php esc_html_e('Email', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="email" id="dsf-email" name="email" required>
+                            <input type="email" id="dsf-email" name="email">
                         </div>
 
                         <div class="dsf-field-group dsf-field-6">
                             <label for="dsf-phone">
                                 <?php esc_html_e('Phone', 'dynamic-services-form'); ?> <span class="dsf-required">*</span>
                             </label>
-                            <input type="tel" id="dsf-phone" name="phone" required>
+                            <input type="tel" id="dsf-phone" name="phone">
                         </div>
 
                         <!-- Entity Type removed -->
@@ -360,7 +360,7 @@ class Form {
             function renderStateBased(service) {
                 var html = '<div class="dsf-field-group">';
                 html += '<label for="dsf-location">Location / State <span class="dsf-required">*</span></label>';
-                html += '<select id="dsf-location" name="location_id" required>';
+                html += '<select id="dsf-location" name="location_id">';
                 html += '<option value="">-- Select Location --</option>';
                 
                 for (var i = 0; i < service.locations.length; i++) {
@@ -427,7 +427,7 @@ class Form {
             function renderPortalBased(service) {
                 var html = '<div class="dsf-field-group">';
                 html += '<label for="dsf-portal">Select Portal <span class="dsf-required">*</span></label>';
-                html += '<select id="dsf-portal" name="portal_id" required>';
+                html += '<select id="dsf-portal" name="portal_id">';
                 html += '<option value="">-- Select Portal --</option>';
                 
                 if (service.portals && service.portals.length > 0) {
@@ -470,7 +470,7 @@ class Form {
                 var html = '<div class="dsf-field-group">';
                 html += '<label for="dsf-calculator-amount">Enter Amount <span class="dsf-required">*</span></label>';
                 html += '<input type="number" id="dsf-calculator-amount" name="calculator_amount" ';
-                html += 'step="0.01" min="0" required placeholder="e.g., 1000000">';
+                html += 'step="0.01" min="0" placeholder="e.g., 1000000">';
                 html += '</div>';
                 
                 html += '<div class="dsf-calculator-tiers">';
