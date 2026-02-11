@@ -36,14 +36,34 @@ trait DevDisplay
     }
 
     /**
-     * Enable dev display session for current user
+     * Get device-specific session key
+     */
+    private function get_device_key(): string
+    {
+        // Create a consistent identifier for this device/session
+        $session_id = isset($_COOKIE['PHPSESSID']) ? $_COOKIE['PHPSESSID'] : wp_hash('dev_display');
+        return hash('sha256', $session_id . $_SERVER['HTTP_USER_AGENT']);
+    }
+
+    /**
+     * Get transient key with user and device identifier
+     */
+    private function get_transient_key(): string
+    {
+        $user_id = get_current_user_id();
+        $device_key = $this->get_device_key();
+        return $this->dev_display_transient . '_' . $user_id . '_' . substr($device_key, 0, 12);
+    }
+
+    /**
+     * Enable dev display session for current user on this device
      */
     private function enable_dev_display_session()
     {
         $user_id = get_current_user_id();
         if ($user_id) {
             set_transient(
-                $this->dev_display_transient . '_' . $user_id,
+                $this->get_transient_key(),
                 1,
                 $this->dev_display_expiration
             );
@@ -51,13 +71,13 @@ trait DevDisplay
     }
 
     /**
-     * Disable dev display session for current user
+     * Disable dev display session for current user on this device
      */
     private function disable_dev_display_session()
     {
         $user_id = get_current_user_id();
         if ($user_id) {
-            delete_transient($this->dev_display_transient . '_' . $user_id);
+            delete_transient($this->get_transient_key());
             // Redirect to remove query parameter from URL
             wp_safe_remote_post(admin_url('admin-ajax.php?action=dsf_redirect_clear'));
             wp_redirect(admin_url('admin.php?page=dsf-submit-services'));
@@ -66,7 +86,7 @@ trait DevDisplay
     }
 
     /**
-     * Check if dev display session is active
+     * Check if dev display session is active on this device
      */
     private function is_dev_display_active(): bool
     {
@@ -74,7 +94,7 @@ trait DevDisplay
         if (!$user_id) {
             return false;
         }
-        return get_transient($this->dev_display_transient . '_' . $user_id) !== false;
+        return get_transient($this->get_transient_key()) !== false;
     }
 
     /**
