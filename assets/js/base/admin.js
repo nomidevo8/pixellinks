@@ -22,8 +22,6 @@
                 const $hasPackages = $('#has_packages').closest('tr');
                 const $fixedPrice = $('#fixed-price-row');
                 const $fixedPriceInput = $('#fixed_price');
-                    console.log("Here is the modal" . model);
-
                 if (model === 'state_based') {
                     $hasPackages.show();
                     $fixedPrice.hide();

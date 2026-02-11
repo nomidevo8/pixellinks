@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Dynamic Services Form
- * Plugin URI: https://example.com/dynamic-services-form
+ * Plugin URI: https://naumansajjad.infy.uk/
  * Description: Scalable, fully dynamic multi-step form plugin for service pricing and quotes with OOP PHP and custom database tables
  * Version: 1.0.0
  * Author: NomiDev
- * Author URI: https://www.softcript.com/
+ * Author URI: https://naumansajjad.infy.uk/
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: dynamic-services-form
@@ -26,8 +26,8 @@ if (!defined('ABSPATH')) {
 define('DSF_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DSF_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DSF_PLUGIN_FILE', __FILE__);
-// define('DSF_PLUGIN_VERSION', '1.0.0');
-define('DSF_PLUGIN_VERSION', time());
+define('DSF_PLUGIN_VERSION', '1.0.0.0');
+// define('DSF_PLUGIN_VERSION', time());
 define('DSF_DB_VERSION', '1.0.0');
 
 // Autoloader for plugin classes

@@ -102,7 +102,6 @@
          * Validate current step and move to next
          */
         validateAndMoveNext: function(step) {
-            console.log('step', step);
             if (!this.validateStep(step)) {
                 return;
             }
@@ -481,7 +480,6 @@
                         },
                         error: function(xhr, status, error) {
                             self.isSubmitting = false;
-                            console.error('AJAX Error:', error);
                             
                             // Show connection error
                             Swal.fire({

@@ -113,7 +113,7 @@ class Plugin {
         
         wp_enqueue_script(
             'dsf-frontend-script',
-            DSF_PLUGIN_URL . 'assets/js/form.js',
+            DSF_PLUGIN_URL . 'assets/js/form.min.js',
             ['jquery', 'sweetalert2-script'],
             DSF_PLUGIN_VERSION,
             true
@@ -150,7 +150,7 @@ class Plugin {
         
         wp_enqueue_script(
             'dsf-admin-script',
-            DSF_PLUGIN_URL . 'assets/js/admin.js',
+            DSF_PLUGIN_URL . 'assets/js/admin.min.js',
             ['jquery'],
             DSF_PLUGIN_VERSION,
             true

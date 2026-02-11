@@ -62,22 +62,6 @@ class Form {
         <script type="text/javascript">
             var DSF_SERVICES_DATA = <?php echo wp_json_encode($services_data); ?>;
         </script>
-        
-        <!-- DEBUG: Backend data for type & category -->
-        <?php if (defined('WP_DEBUG') && WP_DEBUG) :?>
-         
-            <div class="dsf-debug-backend-data" style="background:#f5f5f5; padding:1rem; margin-bottom:1rem; border:1px solid #ccc; font-family:monospace; font-size:12px;">
-                <strong>Backend data for type="<?php
-                echo esc_attr($service_type); ?>" &amp; category="<?php echo esc_attr($service_category); ?>":</strong>
-                <?php if (empty($services_data)) : ?>
-                <p style="margin:0.5rem 0 0;">No services found for this type and category.</p>
-                <?php else : ?>
-                <p style="margin:0.5rem 0 0;">Fetched <?php echo count($services_data); ?> service(s) with full details (pricing model, packages, locations, portals):</p>
-                <pre style="margin:0.5rem 0 0; white-space:pre-wrap; word-break:break-all;"><?php echo esc_html(print_r($this->format_services_for_display($services_data), true)); ?></pre>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?> 
-
         <?php endif; ?>
         <div class="dsf-form-wrapper">
             <!-- Progress Bar -->
@@ -445,7 +429,6 @@ class Form {
                             }
                         }
                         if (!service) {
-                            console.error('Service not found in embedded data');
                             return;
                         }
 

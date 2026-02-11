@@ -264,7 +264,6 @@ trait SubmissionsMenu {
                 .catch(error => {
                     // Only show error if this is still the submission we're trying to load
                     if (submissionId === dsf_current_submission_id && error.name !== 'AbortError') {
-                        console.error('Error:', error);
                         content.innerHTML = '<p style="color: red; padding: 20px;">Error loading submission details.</p>';
                     }
                 });
