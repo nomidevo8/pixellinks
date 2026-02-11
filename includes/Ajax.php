@@ -272,7 +272,7 @@ class Ajax {
             </div>
 
             <div class="section">
-                <div class="section-title">👤 Customer Information</div>
+                <div class="section-title">Customer Information</div>
                 <table class="info-table">
                     <tr>
                         <td>First Name:</td>
@@ -391,16 +391,16 @@ class Ajax {
         // Build pricing details based on pricing model
         $pricing_details = '';
         if (isset($form_data['location_name'])) {
-            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">📍 Location</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['location_name']) . '</td></tr>';
+            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">Location</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['location_name']) . '</td></tr>';
         }
         if (isset($form_data['package_name'])) {
-            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">📦 Package</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['package_name']) . '</td></tr>';
+            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">Package</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['package_name']) . '</td></tr>';
         }
         if (isset($form_data['portal_name'])) {
-            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">🔌 Portal</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['portal_name']) . '</td></tr>';
+            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">Portal</td><td style="padding: 8px; font-weight:bold;">' . esc_html($form_data['portal_name']) . '</td></tr>';
         }
         if (isset($form_data['user_input_amount'])) {
-            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">💰 Amount</td><td style="padding: 8px; font-weight:bold;">$' . number_format(floatval($form_data['user_input_amount']), 2) . '</td></tr>';
+            $pricing_details .= '<tr><td style="padding: 8px; color:#666;">Amount</td><td style="padding: 8px; font-weight:bold;">$' . number_format(floatval($form_data['user_input_amount']), 2) . '</td></tr>';
         }
 
         // Build modern HTML email
