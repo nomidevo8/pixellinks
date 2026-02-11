@@ -103,7 +103,7 @@ class Form {
                 
                 <!-- STEP 1: Service Selection & Pricing Options -->
                 <div class="dsf-step dsf-step-1" data-step="1">
-                    <h2 class="dsf-step-title"><?php esc_html_e('Select Your Service & Pricing', 'dynamic-services-form'); ?></h2>
+                    <h2 class="dsf-step-title" id="dsf-step-title-service"></h2>
                     
                     <!-- Service Dropdown -->
                     <div class="dsf-field-group dsf-field-service">
@@ -429,6 +429,7 @@ class Form {
                         var serviceId = parseInt(this.value);
                         if (!serviceId) {
                             document.getElementById('dsf-pricing-options-container').innerHTML = '';
+                            document.getElementById('dsf-step-title-service').textContent = '';
                             resetPriceDisplay();
                             return;
                         }
@@ -446,6 +447,17 @@ class Form {
                         if (!service) {
                             console.error('Service not found in embedded data');
                             return;
+                        }
+
+                        // Update the step title with selected service name
+                        var titleElement = document.getElementById('dsf-step-title-service');
+                        if (titleElement) {
+                            // Convert kebab-case to Title Case
+                            var formattedName = service.name
+                                .replace(/-/g, ' ')  // Replace hyphens with spaces
+                                .replace(/_/g, ' ')  // Replace underscores with spaces
+                                .replace(/\b\w/g, function(char) { return char.toUpperCase(); }); // Capitalize each word
+                            titleElement.textContent = formattedName;
                         }
 
                         // Render pricing options based on pricing model
