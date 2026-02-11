@@ -146,20 +146,20 @@ class Ajax {
             switch ($form_data['pricing_model']) {
                 case 'state_based':
                     if (isset($form_data['location_name'])) {
-                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">📍 Location</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['location_name']) . '</td></tr>';
+                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">Location</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['location_name']) . '</td></tr>';
                     }
                     if (isset($form_data['package_name'])) {
-                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">📦 Package</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['package_name']) . '</td></tr>';
+                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">Package</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['package_name']) . '</td></tr>';
                     }
                     break;
                 case 'portal_based':
                     if (isset($form_data['portal_name'])) {
-                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">🔌 Portal</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['portal_name']) . '</td></tr>';
+                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">Portal</td><td style="padding: 10px; border: 1px solid #eee;">' . esc_html($form_data['portal_name']) . '</td></tr>';
                     }
                     break;
                 case 'calculator':
                     if (isset($form_data['user_input_amount'])) {
-                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">💰 Amount</td><td style="padding: 10px; border: 1px solid #eee;">$' . number_format(floatval($form_data['user_input_amount']), 2) . '</td></tr>';
+                        $pricing_details .= '<tr><td style="padding: 10px; border: 1px solid #eee; font-weight:bold;">Amount</td><td style="padding: 10px; border: 1px solid #eee;">$' . number_format(floatval($form_data['user_input_amount']), 2) . '</td></tr>';
                     }
                     break;
             }
@@ -730,7 +730,7 @@ class Ajax {
                 case 'state_based':
                     ?>
                     <div class="dsf-submission-section">
-                        <h3>📍 Location & Pricing Details</h3>
+                        <h3>Location & Pricing Details</h3>
                         <?php if (isset($form_data['location_name'])) : ?>
                         <div class="dsf-info-row">
                             <div class="dsf-info-label">Location:</div>
