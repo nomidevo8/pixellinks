@@ -262,80 +262,80 @@ class Ajax {
 <body style="background-color: #ecf0f1; margin: 0; padding: 20px;">
     <div class="container" style="background: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); overflow: hidden;">
         <div class="header">
-            <h1>🔔 New Submission Received</h1>
+            <h1>New Submission Received</h1>
             <p>Submission ID: #' . intval($submission_id) . '</p>
         </div>
 
         <div class="content">
             <div style="text-align: center; margin-bottom: 20px;">
-                <span class="badge-new">⚠️ ACTION REQUIRED</span>
+                <span class="badge-new">ACTION REQUIRED</span>
             </div>
 
             <div class="section">
                 <div class="section-title">👤 Customer Information</div>
                 <table class="info-table">
                     <tr>
-                        <td>👨 First Name:</td>
+                        <td>First Name:</td>
                         <td>' . esc_html($form_data['first_name']) . '</td>
                     </tr>
                     <tr>
-                        <td>👨 Last Name:</td>
+                        <td>Last Name:</td>
                         <td>' . esc_html($form_data['last_name']) . '</td>
                     </tr>
                 </table>
             </div>
 
             <div class="section">
-                <div class="section-title">🏠 Business Information</div>
+                <div class="section-title">Business Information</div>
                 <table class="info-table">
                     <tr>
-                        <td>🏢 Business Name:</td>
+                        <td>Business Name:</td>
                         <td>' . esc_html($form_data['business_name']) . '</td>
                     </tr>
                     <tr>
-                        <td>📍 Business Address:</td>
+                        <td>Business Address:</td>
                         <td>' . esc_html($form_data['business_address']) . '</td>
                     </tr>
                     <tr>
-                        <td>🏙️ Business City:</td>
+                        <td>Business City:</td>
                         <td>' . esc_html($form_data['city']) . '</td>
                     </tr>
                     <tr>
-                        <td>🗺️ Business State:</td>
+                        <td>Business State:</td>
                         <td>' . esc_html($form_data['state']) . '</td>
                     </tr>
                     <tr>
-                        <td>📬 Business Zip Code:</td>
+                        <td>Business Zip Code:</td>
                         <td>' . esc_html($form_data['zipcode']) . '</td>
                     </tr>
                     <tr>
-                        <td>📧 Business Email:</td>
+                        <td>Business Email:</td>
                         <td><a href="mailto:' . esc_attr($form_data['email']) . '" style="color: #3498db;">' . esc_html($form_data['email']) . '</a></td>
                     </tr>
                     <tr>
-                        <td>📱 Business Phone:</td>
+                        <td>Business Phone:</td>
                         <td><a href="tel:' . esc_attr($form_data['phone']) . '" style="color: #3498db;">' . esc_html($form_data['phone']) . '</a></td>
                     </tr>
                 </table>
             </div>
 
             <div class="section">
-                <div class="section-title">🎯 Service Information</div>
+                <div class="section-title">Service Information</div>
                 <table class="info-table">
                     <tr>
-                        <td>📋 Service Type:</td>
+                        <td>Service Type:</td>
                         <td>' . esc_html($service_type) . '</td>
                     </tr>
                     <tr>
-                        <td>📋 Service Category:</td>
+                        <td>Service Category:</td>
                         <td>' . esc_html($service_category) . '</td>
                     </tr>
                     <tr>
-                        <td>📋 Service Name:</td>
+                        <td>Service Name:</td>
                         <td>' . esc_html($service_name) . '</td>
                     </tr>
                     <tr>
-                        <td>⚙️ Pricing Model:</td>
+                        <td>Pricing Model:</td>
                         <td><strong>' . ucfirst(str_replace('_', ' ', esc_html($form_data['pricing_model'] ?? 'fixed_price'))) . '</strong></td>
                     </tr>
                 </table>
@@ -350,7 +350,7 @@ class Ajax {
         if (!empty($form_data['notes'])) {
             $message .= '
             <div class="section">
-                <div class="section-title">📝 Additional Notes</div>
+                <div class="section-title">Additional Notes</div>
                 <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6;">' . nl2br(esc_html($form_data['notes'])) . '</div>
             </div>';
         }
