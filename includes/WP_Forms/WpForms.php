@@ -79,6 +79,8 @@ class WpForms {
             // First Name
             if ( strpos( $field_name, 'first name' ) !== false ) {
                 $data['first_name'] = sanitize_text_field( $field_value );
+            }elseif ( strpos( $field_name, 'full name' ) !== false ) {
+                $data['first_name'] = sanitize_text_field( $field_value );
             }
 
             // Last Name
