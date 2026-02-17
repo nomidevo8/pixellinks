@@ -40,6 +40,8 @@ class Ajax {
         
         add_action('wp_ajax_dsf_get_template_preview', [$this, 'get_template_preview']);
         add_action('wp_ajax_dsf_get_dynamic_tags', [$this, 'get_dynamic_tags']);
+        add_action('wp_ajax_dsf_get_email_templates', [$this, 'get_email_templates']);
+        add_action('wp_ajax_dsf_send_email_to_user', [$this, 'send_email_to_user']);
         
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
     }
@@ -1017,5 +1019,158 @@ class Ajax {
         wp_send_json_success([
             'tags' => $tags,
         ]);
+    }
+
+    /**
+     * Get email templates list via AJAX
+     */
+    public function get_email_templates() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $templates = EmailTemplate::get_all();
+        
+        // Only return basic info (id, name, subject)
+        $template_list = array_map(function($template) {
+            return [
+                'id' => $template['id'],
+                'template_name' => $template['template_name'],
+                'template_subject' => $template['template_subject'],
+            ];
+        }, $templates);
+        
+        wp_send_json_success([
+            'templates' => $template_list,
+        ]);
+    }
+
+    /**
+     * Send email to user with template and attachments
+     */
+    public function send_email_to_user() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
+        $template_id = isset($_POST['template_id']) ? intval($_POST['template_id']) : 0;
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+
+        // Validate inputs
+        if (!$submission_id || !$template_id || !is_email($email)) {
+            wp_send_json_error(['message' => 'Invalid submission, template, or email']);
+        }
+
+        // Get submission data
+        global $wpdb;
+        $submission = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                $submission_id
+            ),
+            ARRAY_A
+        );
+
+        if (!$submission) {
+            wp_send_json_error(['message' => 'Submission not found']);
+        }
+
+        // Get email template by ID
+        $template = null;
+        $templates = EmailTemplate::get_all();
+        foreach ($templates as $t) {
+            if ($t['id'] == $template_id) {
+                $template = $t;
+                break;
+            }
+        }
+
+        if (!$template) {
+            wp_send_json_error(['message' => 'Email template not found']);
+        }
+
+        // Prepare template data for rendering
+        $form_data = json_decode($submission['form_data'], true);
+        $service = new Service($submission['service_id']);
+
+        // Build template context data
+        $template_data = [
+            'CLIENT_NAME' => $submission['first_name'] . ' ' . $submission['last_name'],
+            'CLIENT_EMAIL' => $submission['email'],
+            'BUSINESS_NAME' => $submission['business_name'],
+            'SERVICE_NAME' => $service->get('name'),
+            'SERVICE_TYPE' => $form_data['service_type'] ?? '',
+            'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
+            'YOUR_NAME' => get_bloginfo('admin_email'), // Can be customized
+            'YOUR_TITLE' => 'Business Manager',
+            'COMPANY_NAME' => get_bloginfo('name'),
+            'SUBMISSION_DATE' => date_format(date_create($submission['created_at']), 'M d, Y'),
+            'SUBMISSION_ID' => $submission['id'],
+            'BUSINESS_ADDRESS' => $submission['business_address'],
+            'BUSINESS_PHONE' => $submission['phone'],
+        ];
+
+        // Render template with data
+        $rendered_html = $template['template_html'];
+        $rendered_subject = $template['template_subject'];
+
+        // Replace dynamic tags in both HTML and subject
+        foreach ($template_data as $tag => $value) {
+            $rendered_html = str_ireplace('[' . $tag . ']', $value, $rendered_html);
+            $rendered_subject = str_ireplace('[' . $tag . ']', $value, $rendered_subject);
+        }
+
+        // Inject CSS if present
+        if (!empty($template['template_css'])) {
+            $rendered_html = '<style>' . $template['template_css'] . '</style>' . $rendered_html;
+        }
+
+        // Handle file attachments
+        $attachments = [];
+        if (!empty($_FILES['attachments'])) {
+            $upload_dir = wp_upload_dir();
+            $upload_path = $upload_dir['path'] . '/';
+
+            foreach ($_FILES['attachments']['tmp_name'] as $key => $tmp_name) {
+                if (empty($tmp_name)) {
+                    continue;
+                }
+
+                $filename = sanitize_file_name($_FILES['attachments']['name'][$key]);
+                $file_path = $upload_path . $filename;
+
+                // Check file size (max 10MB)
+                if ($_FILES['attachments']['size'][$key] > 10 * 1024 * 1024) {
+                    wp_send_json_error(['message' => 'File ' . $filename . ' is too large (max 10MB)']);
+                }
+
+                // Move uploaded file
+                if (move_uploaded_file($tmp_name, $file_path)) {
+                    $attachments[] = $file_path;
+                }
+            }
+        }
+
+        // Send email
+        $headers = [
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+        ];
+
+        $result = wp_mail(
+            $email,
+            $rendered_subject,
+            $rendered_html,
+            $headers,
+            $attachments
+        );
+
+        // Clean up uploaded files
+        foreach ($attachments as $file_path) {
+            @unlink($file_path);
+        }
+
+        if ($result) {
+            wp_send_json_success(['message' => 'Email sent successfully']);
+        } else {
+            wp_send_json_error(['message' => 'Failed to send email']);
+        }
     }
 }

@@ -164,12 +164,45 @@ trait WpFormsMenu {
             <?php $this->render_pagination_controls( $params['page'], $total_pages, $search ); ?>
         </div>
 
+        <!-- Modal for Sending Email to WP Forms Submissions -->
+        <div id="dsf-wpforms-send-email-modal" style="display: none; position: fixed; z-index: 101; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+            <div style="background-color: white; margin: 15% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                    <h2 style="margin: 0;">Send Email</h2>
+                    <button type="button" onclick="closeWpformsEmailModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+                </div>
+                <form id="dsf-wpforms-send-email-form" method="POST">
+                    <div style="margin-bottom: 20px;">
+                        <label for="dsf-wpforms-email-template" style="display: block; margin-bottom: 8px; font-weight: 600;">Select Email Template:</label>
+                        <select id="dsf-wpforms-email-template" name="template_id" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <option value="">-- Choose a template --</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label for="dsf-wpforms-email-files" style="display: block; margin-bottom: 8px; font-weight: 600;">Attach Files (Optional):</label>
+                        <input type="file" id="dsf-wpforms-email-files" name="attachments[]" multiple style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="display: block; margin-top: 5px; color: #666;">You can attach PDF, images, or other files</small>
+                    </div>
+                    <div style="background: #f0f8ff; padding: 12px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                        <strong>To:</strong> <span id="dsf-wpforms-email-recipient"></span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" id="dsf-wpforms-send-email-submit" class="button button-primary" style="flex: 1; padding: 10px;">Send Email</button>
+                        <button type="button" onclick="closeWpformsEmailModal()" class="button" style="flex: 1; padding: 10px;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Modal for WP Forms Submission Details -->
         <div id="dsf-wpforms-submission-modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
             <div style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
                     <h2 id="dsf-wpforms-modal-title" style="margin: 0;">WP Forms Submission Details</h2>
-                    <button type="button" onclick="closeWpformsSubmissionModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button type="button" id="dsf-wpforms-send-email-btn" class="button button-primary" style="padding: 5px 15px; font-size: 14px;" onclick="showWpformsEmailModal(dsf_current_wpforms_submission_id)">📧 Send Email</button>
+                        <button type="button" onclick="closeWpformsSubmissionModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">✕</button>
+                    </div>
                 </div>
                 <div id="dsf-wpforms-modal-content">
                     <div style="text-align: center; padding: 40px;">
@@ -299,7 +332,101 @@ trait WpFormsMenu {
                 if (event.target === modal) {
                     closeWpformsSubmissionModal();
                 }
+                const emailModal = document.getElementById('dsf-wpforms-send-email-modal');
+                if (event.target === emailModal) {
+                    closeWpformsEmailModal();
+                }
             }
+
+            // Send Email Modal Functions
+            let dsf_current_wpforms_submission_email = null;
+
+            function showWpformsEmailModal(submissionId) {
+                const modal = document.getElementById('dsf-wpforms-send-email-modal');
+                const emailSpan = document.getElementById('dsf-wpforms-email-recipient');
+                const templateSelect = document.getElementById('dsf-wpforms-email-template');
+                
+                // Get email from current modal data if available
+                const emailElements = document.querySelectorAll('.dsf-wpforms-info-value a[href^="mailto:"]');
+                if (emailElements.length > 0) {
+                    const email = emailElements[0].textContent;
+                    emailSpan.textContent = email;
+                    dsf_current_wpforms_submission_email = email;
+                }
+                
+                // Load email templates
+                if (templateSelect.options.length <= 1) {
+                    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: 'action=dsf_get_email_templates&nonce=<?php echo wp_create_nonce('dsf_form_nonce'); ?>'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            data.data.templates.forEach(template => {
+                                const option = document.createElement('option');
+                                option.value = template.id;
+                                option.textContent = template.template_name + ' - ' + template.template_subject;
+                                templateSelect.appendChild(option);
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading templates:', error));
+                }
+                
+                modal.style.display = 'block';
+            }
+
+            function closeWpformsEmailModal() {
+                document.getElementById('dsf-wpforms-send-email-modal').style.display = 'none';
+                document.getElementById('dsf-wpforms-send-email-form').reset();
+            }
+
+            // Handle form submission
+            document.getElementById('dsf-wpforms-send-email-form')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const templateId = document.getElementById('dsf-wpforms-email-template').value;
+                if (!templateId) {
+                    alert('Please select an email template');
+                    return;
+                }
+                
+                const submitBtn = document.getElementById('dsf-wpforms-send-email-submit');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+                
+                const formData = new FormData(this);
+                formData.append('action', 'dsf_send_email_to_user');
+                formData.append('nonce', '<?php echo wp_create_nonce('dsf_form_nonce'); ?>');
+                formData.append('submission_id', dsf_current_wpforms_submission_id);
+                formData.append('email', dsf_current_wpforms_submission_email);
+                formData.append('template_id', templateId);
+                
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '📧 Send Email';
+                    
+                    if (data.success) {
+                        alert('Email sent successfully!');
+                        closeWpformsEmailModal();
+                    } else {
+                        alert('Error: ' + (data.data?.message || 'Failed to send email'));
+                    }
+                })
+                .catch(error => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '📧 Send Email';
+                    alert('Error sending email: ' + error.message);
+                    console.error('Error:', error);
+                });
+            });
         </script>
         <?php
     }
