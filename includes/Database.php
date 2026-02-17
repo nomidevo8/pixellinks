@@ -174,6 +174,33 @@ class Database {
             KEY is_default (is_default),
             KEY enabled (enabled)
         ) $charset_collate;";
+
+        // WP Forms Submissions table (separate from regular submissions)
+        $wpforms_submissions_table = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}dsf_wpforms_submissions (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            form_id BIGINT UNSIGNED NOT NULL,
+            entry_id BIGINT UNSIGNED NOT NULL,
+            first_name VARCHAR(100),
+            last_name VARCHAR(100),
+            business_name VARCHAR(255),
+            business_address VARCHAR(255),
+            phone VARCHAR(20),
+            email VARCHAR(255),
+            city VARCHAR(100),
+            state VARCHAR(50),
+            zipcode VARCHAR(10),
+            entity_type VARCHAR(100),
+            total_price DECIMAL(10, 2),
+            notes LONGTEXT,
+            form_data LONGTEXT,
+            status VARCHAR(50) NOT NULL DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            KEY form_id (form_id),
+            KEY email (email),
+            KEY status (status),
+            KEY created_at (created_at)
+        ) $charset_collate;";
         
         // Execute table creation
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -185,6 +212,7 @@ class Database {
         dbDelta($portals_table);
         dbDelta($submissions_table);
         dbDelta($email_templates_table);
+        dbDelta($wpforms_submissions_table);
     }
 
     /**
@@ -193,6 +221,7 @@ class Database {
     public static function drop_tables() {
         global $wpdb;
         
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_wpforms_submissions");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_email_templates");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_submissions");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_portals");

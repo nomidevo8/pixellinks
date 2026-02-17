@@ -830,7 +830,7 @@ class Ajax {
         global $wpdb;
         $submission = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                "SELECT * FROM {$wpdb->prefix}dsf_wpforms_submissions WHERE id = %d",
                 $submission_id
             ),
             ARRAY_A
@@ -1058,15 +1058,26 @@ class Ajax {
             wp_send_json_error(['message' => 'Invalid submission, template, or email']);
         }
 
-        // Get submission data
+        // Get submission data - try wpforms_submissions first, then regular submissions
         global $wpdb;
         $submission = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                "SELECT * FROM {$wpdb->prefix}dsf_wpforms_submissions WHERE id = %d",
                 $submission_id
             ),
             ARRAY_A
         );
+
+        // If not found in wpforms_submissions, try regular submissions
+        if (!$submission) {
+            $submission = $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                    $submission_id
+                ),
+                ARRAY_A
+            );
+        }
 
         if (!$submission) {
             wp_send_json_error(['message' => 'Submission not found']);
@@ -1088,20 +1099,17 @@ class Ajax {
 
         // Prepare template data for rendering
         $form_data = json_decode($submission['form_data'], true);
-        $service = new Service($submission['service_id']);
-
-        // Helper function to convert slug to human-readable format
-        $slugToHuman = function($slug) {
-            return ucwords(str_replace(['-', '_'], ' ', $slug));
-        };
+        
+        // For WP Forms submissions, entity_type is the "service"
+        $service_name = $submission['entity_type'] ?? 'Service';
 
         // Build template context data
         $template_data = [
             'CLIENT_NAME' => $submission['first_name'] . ' ' . $submission['last_name'],
             'CLIENT_EMAIL' => $submission['email'],
             'BUSINESS_NAME' => $submission['business_name'],
-            'SERVICE_NAME' => $slugToHuman($service->get('name')),
-            'SERVICE_TYPE' => $slugToHuman($form_data['service_type'] ?? ''),
+            'SERVICE_NAME' => $service_name,
+            'SERVICE_TYPE' => $form_data['service_type'] ?? '',
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
             'YOUR_NAME' => get_bloginfo('admin_email'), 
             'YOUR_TITLE' => 'Business Manager',
@@ -1111,6 +1119,15 @@ class Ajax {
             'BUSINESS_ADDRESS' => $submission['business_address'],
             'BUSINESS_PHONE' => $submission['phone'],
         ];
+
+        // Helper function to convert slug to human-readable format
+        $slugToHuman = function($slug) {
+            return ucwords(str_replace(['-', '_'], ' ', $slug));
+        };
+
+        // Apply slug conversion
+        $template_data['SERVICE_NAME'] = $slugToHuman($service_name);
+        $template_data['SERVICE_TYPE'] = $slugToHuman($template_data['SERVICE_TYPE']);
 
         // Render template with data
         $rendered_html = $template['template_html'];

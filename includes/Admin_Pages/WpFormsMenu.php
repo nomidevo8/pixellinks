@@ -23,30 +23,22 @@ trait WpFormsMenu {
         // Get pagination parameters
         $params = $this->get_pagination_params();
         
-        // Get all WP Forms submissions
+        // Get all WP Forms submissions from dedicated table
         global $wpdb;
         $all_submissions = $wpdb->get_results(
-            "SELECT * FROM {$wpdb->prefix}dsf_submissions 
-             WHERE form_data LIKE '%\"form_source\":\"wpforms\"%' 
-             ORDER BY created_at DESC",
+            "SELECT * FROM {$wpdb->prefix}dsf_wpforms_submissions ORDER BY created_at DESC",
             ARRAY_A
         );
 
         // Convert to filterable format
         $submissions_with_details = array_map( function( $submission ) {
-            $service = new Service( $submission['service_id'] );
-            $form_data = json_decode( $submission['form_data'], true );
-            
             return array_merge( $submission, [
-                'service_name'  => $service->get( 'name' ),
-                'form_id'       => $form_data['form_id'] ?? '',
-                'entry_id'      => $form_data['entry_id'] ?? '',
                 'search_text'   => strtolower(
                     $submission['business_name'] . ' ' . 
                     $submission['email'] . ' ' . 
                     $submission['first_name'] . ' ' . 
                     $submission['last_name'] . ' ' .
-                    $service->get( 'name' )
+                    $submission['entity_type']
                 )
             ]);
         }, $all_submissions );
@@ -115,7 +107,6 @@ trait WpFormsMenu {
                         </tr>
                     <?php else : ?>
                         <?php foreach ( $submissions as $submission ) : 
-                            $service = new Service( $submission['service_id'] );
                             $form_data = json_decode( $submission['form_data'], true );
                         ?>
                             <tr>
@@ -443,7 +434,7 @@ trait WpFormsMenu {
         if ( $id ) {
             global $wpdb;
             $wpdb->delete(
-                Database::get_table( 'submissions' ),
+                Database::get_table( 'wpforms_submissions' ),
                 [ 'id' => $id ],
                 [ '%d' ]
             );

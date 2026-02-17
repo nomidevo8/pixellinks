@@ -157,18 +157,9 @@ class WpForms {
     private function save_submission( $data, $fields, $form_id, $entry_id ) {
         global $wpdb;
 
-        // Use a default service ID (you may want to map this to actual services)
-        $service_id = 1; // Default service ID, can be customized
-
         $submission_data = [
-            'service_id'       => $service_id,
-            'form_data'        => wp_json_encode( [
-                'form_id'      => $form_id,
-                'entry_id'     => $entry_id,
-                'form_source'  => 'wpforms',
-                'fields'       => $fields,
-                'original_submission' => true
-            ] ),
+            'form_id'          => $form_id,
+            'entry_id'         => $entry_id,
             'first_name'       => $data['first_name'],
             'last_name'        => $data['last_name'],
             'business_name'    => $data['business_name'],
@@ -181,30 +172,36 @@ class WpForms {
             'zipcode'          => $data['zipcode'],
             'total_price'      => $data['total_price'],
             'notes'            => $data['notes'],
+            'form_data'        => wp_json_encode( [
+                'form_id'      => $form_id,
+                'entry_id'     => $entry_id,
+                'fields'       => $fields,
+            ] ),
             'status'           => 'pending',
             'created_at'       => current_time( 'mysql' ),
         ];
 
         $wpdb->insert(
-            Database::get_table( 'submissions' ),
+            Database::get_table( 'wpforms_submissions' ),
             $submission_data,
             [
-                '%d',  // service_id
-                '%s',  // form_data
-                '%s',  // first_name
-                '%s',  // last_name
-                '%s',  // business_name
-                '%s',  // email
-                '%s',  // phone
-                '%s',  // entity_type
-                '%s',  // state
-                '%s',  // city
-                '%s',  // business_address
-                '%s',  // zipcode
-                '%f',  // total_price
-                '%s',  // notes
-                '%s',  // status
-                '%s',  // created_at
+                '%d',  
+                '%d',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%f',  
+                '%s',  
+                '%s',  
+                '%s',  
+                '%s',  
             ]
         );
 
