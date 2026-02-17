@@ -1145,7 +1145,7 @@ class Ajax {
             'CLIENT_EMAIL' => $submission['email'],
             'BUSINESS_NAME' => $submission['business_name'],
             'SERVICE_NAME' => $service_name,
-            'SERVICE_TYPE' => $form_data['service_type'] ?? '',
+            'SERVICE_TYPE' => $form_data['service_type'] ?? 'Business Registration',
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
             'YOUR_NAME' => get_bloginfo('admin_email'), 
             'YOUR_TITLE' => 'Business Manager',
