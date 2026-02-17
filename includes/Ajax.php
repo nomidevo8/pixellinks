@@ -1098,7 +1098,7 @@ class Ajax {
             'SERVICE_NAME' => $service->get('name'),
             'SERVICE_TYPE' => $form_data['service_type'] ?? '',
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
-            'YOUR_NAME' => get_bloginfo('admin_email'), // Can be customized
+            'YOUR_NAME' => get_bloginfo('admin_email'), 
             'YOUR_TITLE' => 'Business Manager',
             'COMPANY_NAME' => get_bloginfo('name'),
             'SUBMISSION_DATE' => date_format(date_create($submission['created_at']), 'M d, Y'),
