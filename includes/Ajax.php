@@ -1091,32 +1091,29 @@ class Ajax {
         $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
         $template_id = isset($_POST['template_id']) ? intval($_POST['template_id']) : 0;
         $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $table = isset($_POST['table']) ? sanitize_text_field($_POST['table']) : 'submissions';
 
         // Validate inputs
         if (!$submission_id || !$template_id || !is_email($email)) {
             wp_send_json_error(['message' => 'Invalid submission, template, or email']);
         }
 
-        // Get submission data - try wpforms_submissions first, then regular submissions
+        // Allow only expected table names
+        $allowed_tables = ['submissions', 'wpforms_submissions'];
+        if (!in_array($table, $allowed_tables, true)) {
+            wp_send_json_error(['message' => 'Invalid table']);
+        }
+
+        // Get submission data from specified table
         global $wpdb;
+        $table_name = Database::get_table($table);
         $submission = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}dsf_wpforms_submissions WHERE id = %d",
+                "SELECT * FROM $table_name WHERE id = %d",
                 $submission_id
             ),
             ARRAY_A
         );
-
-        // If not found in wpforms_submissions, try regular submissions
-        if (!$submission) {
-            $submission = $wpdb->get_row(
-                $wpdb->prepare(
-                    "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
-                    $submission_id
-                ),
-                ARRAY_A
-            );
-        }
 
         if (!$submission) {
             wp_send_json_error(['message' => 'Submission not found']);

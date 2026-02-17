@@ -444,6 +444,7 @@ trait SubmissionsMenu {
                 formData.append('submission_id', dsf_current_submission_id);
                 formData.append('email', dsf_current_submission_email);
                 formData.append('template_id', templateId);
+                formData.append('table', 'submissions');
                 
                 fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                     method: 'POST',

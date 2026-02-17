@@ -444,6 +444,7 @@ trait WpFormsMenu {
                 formData.append('submission_id', dsf_current_wpforms_submission_id);
                 formData.append('email', dsf_current_wpforms_submission_email);
                 formData.append('template_id', templateId);
+                formData.append('table', 'wpforms_submissions');
                 
                 fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                     method: 'POST',
