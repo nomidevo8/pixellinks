@@ -115,7 +115,7 @@ class EmailTemplate {
             'template_name'    => sanitize_text_field($data['template_name'] ?? ''),
             'template_slug'    => sanitize_text_field($data['template_slug'] ?? ''),
             'template_subject' => sanitize_text_field($data['template_subject'] ?? ''),
-            'template_html'    => wp_kses_post($data['template_html'] ?? ''),
+            'template_html' => wp_unslash($data['template_html'] ?? ''),
             'template_css'     => wp_kses_post($data['template_css'] ?? ''),
             'description'      => sanitize_textarea_field($data['description'] ?? ''),
             'is_default'       => isset($data['is_default']) ? 1 : 0,

@@ -1128,7 +1128,6 @@ class Ajax {
                 break;
             }
         }
-
         if (!$template) {
             wp_send_json_error(['message' => 'Email template not found']);
         }
