@@ -6,6 +6,7 @@
  */
 
 namespace DSF;
+// use DSF\WP_Forms\WpForms;
 
 class Plugin {
     /**
@@ -75,6 +76,9 @@ class Plugin {
         
         // Initialize AJAX handlers
         Ajax::instance();
+
+        // Initialize WP Forms integration
+        \DSF\WP_Forms\WpForms::instance();
         
         // Enqueue frontend scripts and styles
         add_action('wp_enqueue_scripts', [$this, 'enqueue_frontend_assets']);

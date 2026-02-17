@@ -36,6 +36,7 @@ class Ajax {
         add_action('wp_ajax_nopriv_dsf_submit_form', [$this, 'submit_form']);
         
         add_action('wp_ajax_dsf_get_submission_details', [$this, 'get_submission_details']);
+        add_action('wp_ajax_dsf_get_wpforms_submission_details', [$this, 'get_wpforms_submission_details']);
         
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
     }
@@ -796,6 +797,158 @@ class Ajax {
 
         <?php if (!empty($submission['notes'])) : ?>
         <div class="dsf-submission-section">
+            <h3>📝 Additional Notes</h3>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6; border-left: 4px solid #3498db;">
+                <?php echo nl2br(esc_html($submission['notes'])); ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        <?php
+        
+        wp_send_json_success([
+            'html' => ob_get_clean(),
+        ]);
+    }
+
+    /**
+     * Get WP Forms submission details via AJAX
+     */
+    public function get_wpforms_submission_details() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
+        
+        if (!$submission_id) {
+            wp_send_json_error(['message' => 'Invalid submission ID']);
+        }
+
+        global $wpdb;
+        $submission = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}dsf_submissions WHERE id = %d",
+                $submission_id
+            ),
+            ARRAY_A
+        );
+
+        if (!$submission) {
+            wp_send_json_error(['message' => 'Submission not found']);
+        }
+
+        $form_data = json_decode($submission['form_data'], true);
+        $fields = $form_data['fields'] ?? [];
+
+        ob_start();
+        ?>
+        <div class="dsf-wpforms-section">
+            <h3>👤 Personal Information</h3>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">First Name:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['first_name']); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Last Name:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['last_name']); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Email:</div>
+                <div class="dsf-wpforms-info-value"><a href="mailto:<?php echo esc_attr($submission['email']); ?>" style="color: #0073aa;"><?php echo esc_html($submission['email']); ?></a></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Phone:</div>
+                <div class="dsf-wpforms-info-value"><a href="tel:<?php echo esc_attr($submission['phone']); ?>" style="color: #0073aa;"><?php echo esc_html($submission['phone']); ?></a></div>
+            </div>
+        </div>
+
+        <div class="dsf-wpforms-section">
+            <h3>🏢 Business Information</h3>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Business Name:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['business_name'] ?: '-'); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Entity Type:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['entity_type'] ?: '-'); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Business Address:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['business_address'] ?: '-'); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">City:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['city'] ?: '-'); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">State:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['state'] ?: '-'); ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Zip Code:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html($submission['zipcode'] ?: '-'); ?></div>
+            </div>
+        </div>
+
+        <div class="dsf-wpforms-price-box">
+            <div class="dsf-wpforms-price-label">Total Amount:</div>
+            <div class="dsf-wpforms-price-amount"><?php echo ! empty($submission['total_price']) ? '$' . number_format((float) $submission['total_price'], 2) : '$0.00'; ?></div>
+        </div>
+
+        <div class="dsf-wpforms-section">
+            <h3>📋 WP Forms Data</h3>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Form ID:</div>
+                <div class="dsf-wpforms-info-value"><?php echo isset($form_data['form_id']) ? esc_html($form_data['form_id']) : '-'; ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Entry ID:</div>
+                <div class="dsf-wpforms-info-value"><?php echo isset($form_data['entry_id']) ? esc_html($form_data['entry_id']) : '-'; ?></div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Submitted:</div>
+                <div class="dsf-wpforms-info-value"><?php echo esc_html(date_format(date_create($submission['created_at']), 'M d, Y H:i:s')); ?></div>
+            </div>
+        </div>
+
+        <div class="dsf-wpforms-section">
+            <h3>🔍 All Form Fields</h3>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; max-height: 400px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f0f0f0; border-bottom: 2px solid #ddd;">
+                            <th style="padding: 8px; text-align: left; font-weight: 600; color: #333;">Field Name</th>
+                            <th style="padding: 8px; text-align: left; font-weight: 600; color: #333;">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($fields as $field) : ?>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 8px; color: #555;"><?php echo esc_html($field['name'] ?? ''); ?></td>
+                                <td style="padding: 8px; color: #333;">
+                                    <?php 
+                                        if (isset($field['value_choice']) && $field['value_choice']) {
+                                            echo esc_html($field['value_choice']);
+                                            if (isset($field['amount']) && $field['amount']) {
+                                                echo ' - $' . number_format((float)$field['amount'], 2);
+                                            }
+                                        } else {
+                                            $value = $field['value'] ?? '';
+                                            if (is_array($value)) {
+                                                echo esc_html(implode(', ', $value));
+                                            } else {
+                                                echo esc_html($value ?: '-');
+                                            }
+                                        }
+                                    ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <?php if (!empty($submission['notes'])) : ?>
+        <div class="dsf-wpforms-section">
             <h3>📝 Additional Notes</h3>
             <div style="background: #f8f9fa; padding: 12px; border-radius: 4px; color: #555; line-height: 1.6; border-left: 4px solid #3498db;">
                 <?php echo nl2br(esc_html($submission['notes'])); ?>

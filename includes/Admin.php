@@ -8,6 +8,7 @@ use DSF\Admin_Pages\LocationsMenu;
 use DSF\Admin_Pages\LocationPricingMenu;
 use DSF\Admin_Pages\PortalsMenu;
 use DSF\Admin_Pages\SubmissionsMenu;
+use DSF\Admin_Pages\WpFormsMenu;
 use DSF\Admin_Pages\SettingsMenu;
 use DSF\Admin_Pages\Utils\DevDisplay;
 /**
@@ -27,6 +28,7 @@ class Admin {
     use LocationPricingMenu;
     use PortalsMenu;
     use SubmissionsMenu;
+    use WpFormsMenu;
     use SettingsMenu;
     use DevDisplay;
     /**
@@ -80,6 +82,16 @@ class Admin {
             'manage_options',
             'dsf-submit-services',
             [$this, 'page_submissions']
+        );
+        
+        // WP Forms Submissions submenu
+        add_submenu_page(
+            'dsf-submit-services',
+            __('WP Forms Submissions', 'dynamic-services-form'),
+            __('WP Forms Submissions', 'dynamic-services-form'),
+            'manage_options',
+            'dsf-wpforms-submissions',
+            [$this, 'page_wpforms_submissions']
         );
         
         // Settings submenu
@@ -203,6 +215,9 @@ class Admin {
                 break;
             case 'delete_portal':
                 $this->delete_portal();
+                break;
+            case 'delete_wpforms_submission':
+                $this->delete_wpforms_submission();
                 break;
         }
     }
