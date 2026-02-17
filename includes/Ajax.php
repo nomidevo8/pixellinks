@@ -42,6 +42,7 @@ class Ajax {
         add_action('wp_ajax_dsf_get_dynamic_tags', [$this, 'get_dynamic_tags']);
         add_action('wp_ajax_dsf_get_email_templates', [$this, 'get_email_templates']);
         add_action('wp_ajax_dsf_send_email_to_user', [$this, 'send_email_to_user']);
+        add_action('wp_ajax_dsf_update_submission_status', [$this, 'update_submission_status']);
         
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
     }
@@ -1041,6 +1042,44 @@ class Ajax {
         wp_send_json_success([
             'templates' => $template_list,
         ]);
+    }
+
+    /**
+     * Update submission status (admin)
+     */
+    public function update_submission_status() {
+        check_ajax_referer('dsf_admin_nonce', 'nonce');
+
+        $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
+        $table = isset($_POST['table']) ? sanitize_text_field($_POST['table']) : '';
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+
+        if (!$submission_id || !$table || !$status) {
+            wp_send_json_error(['message' => 'Invalid parameters']);
+        }
+
+        // Allow only expected table names
+        $allowed = [ 'submissions', 'wpforms_submissions' ];
+        if (!in_array($table, $allowed, true)) {
+            wp_send_json_error(['message' => 'Invalid table']);
+        }
+
+        global $wpdb;
+        $table_name = Database::get_table($table);
+
+        $updated = $wpdb->update(
+            $table_name,
+            [ 'status' => $status, 'updated_at' => current_time('mysql') ],
+            [ 'id' => $submission_id ],
+            [ '%s', '%s' ],
+            [ '%d' ]
+        );
+
+        if ($updated === false) {
+            wp_send_json_error(['message' => 'Failed to update status']);
+        }
+
+        wp_send_json_success(['message' => 'Status updated']);
     }
 
     /**

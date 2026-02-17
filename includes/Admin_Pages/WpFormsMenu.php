@@ -93,6 +93,7 @@ trait WpFormsMenu {
                         <th style="width: 13%;"><?php esc_html_e( 'Business Name', 'dynamic-services-form' ); ?></th>
                         <th style="width: 10%;"><?php esc_html_e( 'Entity Type', 'dynamic-services-form' ); ?></th>
                         <th style="width: 10%;"><?php esc_html_e( 'Total Price', 'dynamic-services-form' ); ?></th>
+                        <th style="width: 12%;"><?php esc_html_e( 'Status', 'dynamic-services-form' ); ?></th>
                         <th style="width: 15%;"><?php esc_html_e( 'Actions', 'dynamic-services-form' ); ?></th>
                     </tr>
                 </thead>
@@ -131,6 +132,13 @@ trait WpFormsMenu {
                                     <strong style="color: #27ae60;">
                                         <?php echo ! empty( $submission['total_price'] ) ? '$' . number_format( (float) $submission['total_price'], 2 ) : '--'; ?>
                                     </strong>
+                                </td>
+                                <td>
+                                    <select onchange="updateSubmissionStatus(<?php echo intval( $submission['id'] ); ?>, 'wpforms_submissions', this)" style="width: 100%;">
+                                        <?php $statuses = ['pending','success','failed','canceled']; foreach($statuses as $st): ?>
+                                            <option value="<?php echo esc_attr($st); ?>" <?php selected($submission['status'], $st); ?>><?php echo esc_html(ucfirst($st)); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </td>
                                 <td>
                                     <button type="button" class="button button-small" onclick="showWpformsSubmissionModal(<?php echo intval( $submission['id'] ); ?>)" style="margin-right: 5px;">
@@ -178,7 +186,7 @@ trait WpFormsMenu {
                         <strong>To:</strong> <span id="dsf-wpforms-email-recipient"></span>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button type="submit" id="dsf-wpforms-send-email-submit" class="button button-primary" style="flex: 1; padding: 10px;">Send Email</button>
+                        <button type="submit" id="dsf-wpforms-send-email-submit" class="button button-primary" style="flex: 1; padding: 10px;" disabled>Send Email</button>
                         <button type="button" onclick="closeWpformsEmailModal()" class="button" style="flex: 1; padding: 10px;">Cancel</button>
                     </div>
                 </form>
@@ -331,6 +339,39 @@ trait WpFormsMenu {
 
             // Send Email Modal Functions
             let dsf_current_wpforms_submission_email = null;
+            let dsf_email_templates = [];
+            let dsf_templates_loaded = false;
+            const dsf_form_nonce = '<?php echo wp_create_nonce('dsf_form_nonce'); ?>';
+            const dsf_admin_nonce = '<?php echo wp_create_nonce('dsf_admin_nonce'); ?>';
+
+            // Preload templates on page load so modal is instant
+            (function(){
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'action=dsf_get_email_templates&nonce=' + dsf_form_nonce
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        dsf_email_templates = data.data.templates || [];
+                        dsf_templates_loaded = true;
+                        const sel = document.getElementById('dsf-wpforms-email-template');
+                        if (sel) {
+                            while (sel.options.length > 1) sel.remove(1);
+                            dsf_email_templates.forEach(t => {
+                                const option = document.createElement('option');
+                                option.value = t.id;
+                                option.textContent = t.template_name + ' - ' + t.template_subject;
+                                sel.appendChild(option);
+                            });
+                        }
+                        document.getElementById('dsf-send-email-submit')?.removeAttribute('disabled');
+                        document.getElementById('dsf-wpforms-send-email-submit')?.removeAttribute('disabled');
+                    }
+                })
+                .catch(()=>{});
+            })();
 
             function showWpformsEmailModal(submissionId) {
                 const modal = document.getElementById('dsf-wpforms-send-email-modal');
@@ -418,6 +459,29 @@ trait WpFormsMenu {
                     console.error('Error:', error);
                 });
             });
+
+            // Update submission status via AJAX
+            function updateSubmissionStatus(submissionId, table, selectEl) {
+                const newStatus = selectEl.value;
+                selectEl.disabled = true;
+                const body = 'action=dsf_update_submission_status&nonce=' + encodeURIComponent(dsf_admin_nonce) + '&submission_id=' + encodeURIComponent(submissionId) + '&table=' + encodeURIComponent(table) + '&status=' + encodeURIComponent(newStatus);
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: body
+                })
+                .then(r => r.json())
+                .then(data => {
+                    selectEl.disabled = false;
+                    if (!data.success) {
+                        alert('Failed to update status: ' + (data.data?.message || 'Unknown error'));
+                    }
+                })
+                .catch(() => {
+                    selectEl.disabled = false;
+                    alert('Failed to update status');
+                });
+            }
         </script>
         <?php
     }
