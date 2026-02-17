@@ -247,8 +247,12 @@ trait EmailTemplatesMenu {
         <script>
             function copyToClipboard(text) {
                 navigator.clipboard.writeText(text).then(() => {
-                    alert('Tag copied: ' + text);
-                });
+                        if (typeof showToast === 'function') {
+                            showToast('Tag copied: ' + text, 'success');
+                        } else {
+                            alert('Tag copied: ' + text);
+                        }
+                    });
             }
 
             // Auto-generate slug from name

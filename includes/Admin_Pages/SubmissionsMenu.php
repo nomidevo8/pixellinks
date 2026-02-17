@@ -157,6 +157,9 @@ trait SubmissionsMenu {
             <?php $this->render_pagination_controls($params['page'], $total_pages, $search); ?>
         </div>
 
+        <!-- Toast Notification -->
+        <div id="dsf-toast" style="display:none; position: fixed; right: 20px; bottom: 20px; z-index: 2000; padding: 10px 14px; border-radius: 6px; color: #fff; font-weight: 600;"></div>
+
         <!-- Modal for Sending Email -->
         <div id="dsf-send-email-modal" style="display: none; position: fixed; z-index: 101; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
             <div style="background-color: white; margin: 15% auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -266,6 +269,9 @@ trait SubmissionsMenu {
             function showSubmissionModal(submissionId) {
                 const modal = document.getElementById('dsf-submission-modal');
                 const content = document.getElementById('dsf-modal-content');
+                // disable send email button while details load
+                const sendBtn = document.getElementById('dsf-send-email-btn');
+                if (sendBtn) sendBtn.disabled = true;
                 modal.style.display = 'block';
 
                 // Cancel any previous request
@@ -297,8 +303,11 @@ trait SubmissionsMenu {
                     if (submissionId === dsf_current_submission_id) {
                         if (data.success) {
                             content.innerHTML = data.data.html;
+                            // enable send button after details are loaded
+                            if (sendBtn) sendBtn.removeAttribute('disabled');
                         } else {
                             content.innerHTML = '<p style="color: red; padding: 20px;">Error loading submission details.</p>';
+                            if (sendBtn) sendBtn.disabled = true;
                         }
                     }
                 })
@@ -306,6 +315,7 @@ trait SubmissionsMenu {
                     // Only show error if this is still the submission we're trying to load
                     if (submissionId === dsf_current_submission_id && error.name !== 'AbortError') {
                         content.innerHTML = '<p style="color: red; padding: 20px;">Error loading submission details.</p>';
+                        if (sendBtn) sendBtn.disabled = true;
                     }
                 });
             }
@@ -420,7 +430,7 @@ trait SubmissionsMenu {
                 
                 const templateId = document.getElementById('dsf-email-template').value;
                 if (!templateId) {
-                    alert('Please select an email template');
+                    showToast('Please select an email template', 'warning');
                     return;
                 }
                 
@@ -445,19 +455,29 @@ trait SubmissionsMenu {
                     submitBtn.textContent = '📧 Send Email';
                     
                     if (data.success) {
-                        alert('Email sent successfully!');
+                        showToast('Email sent successfully', 'success');
                         closeSendEmailModal();
                     } else {
-                        alert('Error: ' + (data.data?.message || 'Failed to send email'));
+                        showToast('Error: ' + (data.data?.message || 'Failed to send email'), 'error');
                     }
                 })
                 .catch(error => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = '📧 Send Email';
-                    alert('Error sending email: ' + error.message);
+                    showToast('Error sending email: ' + error.message, 'error');
                     console.error('Error:', error);
                 });
             });
+
+            // Toast helper
+            function showToast(message, type) {
+                const toast = document.getElementById('dsf-toast');
+                if (!toast) return;
+                toast.style.display = 'block';
+                toast.textContent = message;
+                toast.style.background = type === 'success' ? '#27ae60' : (type === 'warning' ? '#f39c12' : '#e74c3c');
+                setTimeout(() => { toast.style.display = 'none'; }, 3500);
+            }
 
             // Update submission status via AJAX
             function updateSubmissionStatus(submissionId, table, selectEl) {
@@ -472,13 +492,15 @@ trait SubmissionsMenu {
                 .then(r => r.json())
                 .then(data => {
                     selectEl.disabled = false;
-                    if (!data.success) {
-                        alert('Failed to update status: ' + (data.data?.message || 'Unknown error'));
+                    if (data.success) {
+                        showToast('Status updated', 'success');
+                    } else {
+                        showToast('Failed to update status: ' + (data.data?.message || 'Unknown error'), 'error');
                     }
                 })
                 .catch(() => {
                     selectEl.disabled = false;
-                    alert('Failed to update status');
+                    showToast('Failed to update status', 'error');
                 });
             }
         </script>

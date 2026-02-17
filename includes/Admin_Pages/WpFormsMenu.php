@@ -212,6 +212,9 @@ trait WpFormsMenu {
             </div>
         </div>
 
+        <!-- Toast Notification -->
+        <div id="dsf-toast" style="display:none; position: fixed; right: 20px; bottom: 20px; z-index: 2000; padding: 10px 14px; border-radius: 6px; color: #fff; font-weight: 600;"></div>
+
         <style>
             @keyframes spin {
                 0% { transform: rotate(0deg); }
@@ -272,6 +275,9 @@ trait WpFormsMenu {
             function showWpformsSubmissionModal(submissionId) {
                 const modal = document.getElementById('dsf-wpforms-submission-modal');
                 const content = document.getElementById('dsf-wpforms-modal-content');
+                // disable send email button while details load
+                const sendBtn = document.getElementById('dsf-wpforms-send-email-btn');
+                if (sendBtn) sendBtn.disabled = true;
                 modal.style.display = 'block';
 
                 // Cancel any previous request
@@ -303,8 +309,10 @@ trait WpFormsMenu {
                     if (submissionId === dsf_current_wpforms_submission_id) {
                         if (data.success) {
                             content.innerHTML = data.data.html;
+                            if (sendBtn) sendBtn.removeAttribute('disabled');
                         } else {
                             content.innerHTML = '<p style="color: red; padding: 20px;">Error loading submission details.</p>';
+                            if (sendBtn) sendBtn.disabled = true;
                         }
                     }
                 })
@@ -312,6 +320,7 @@ trait WpFormsMenu {
                     // Only show error if this is still the submission we're trying to load
                     if (submissionId === dsf_current_wpforms_submission_id && error.name !== 'AbortError') {
                         content.innerHTML = '<p style="color: red; padding: 20px;">Error loading submission details.</p>';
+                        if (sendBtn) sendBtn.disabled = true;
                     }
                 });
             }
@@ -421,7 +430,7 @@ trait WpFormsMenu {
                 
                 const templateId = document.getElementById('dsf-wpforms-email-template').value;
                 if (!templateId) {
-                    alert('Please select an email template');
+                    showToast('Please select an email template', 'warning');
                     return;
                 }
                 
@@ -446,19 +455,29 @@ trait WpFormsMenu {
                     submitBtn.textContent = '📧 Send Email';
                     
                     if (data.success) {
-                        alert('Email sent successfully!');
+                        showToast('Email sent successfully', 'success');
                         closeWpformsEmailModal();
                     } else {
-                        alert('Error: ' + (data.data?.message || 'Failed to send email'));
+                        showToast('Error: ' + (data.data?.message || 'Failed to send email'), 'error');
                     }
                 })
                 .catch(error => {
                     submitBtn.disabled = false;
                     submitBtn.textContent = '📧 Send Email';
-                    alert('Error sending email: ' + error.message);
+                    showToast('Error sending email: ' + error.message, 'error');
                     console.error('Error:', error);
                 });
             });
+
+            // Toast helper
+            function showToast(message, type) {
+                const toast = document.getElementById('dsf-toast');
+                if (!toast) return;
+                toast.style.display = 'block';
+                toast.textContent = message;
+                toast.style.background = type === 'success' ? '#27ae60' : (type === 'warning' ? '#f39c12' : '#e74c3c');
+                setTimeout(() => { toast.style.display = 'none'; }, 3500);
+            }
 
             // Update submission status via AJAX
             function updateSubmissionStatus(submissionId, table, selectEl) {
@@ -473,13 +492,15 @@ trait WpFormsMenu {
                 .then(r => r.json())
                 .then(data => {
                     selectEl.disabled = false;
-                    if (!data.success) {
-                        alert('Failed to update status: ' + (data.data?.message || 'Unknown error'));
+                    if (data.success) {
+                        showToast('Status updated', 'success');
+                    } else {
+                        showToast('Failed to update status: ' + (data.data?.message || 'Unknown error'), 'error');
                     }
                 })
                 .catch(() => {
                     selectEl.disabled = false;
-                    alert('Failed to update status');
+                    showToast('Failed to update status', 'error');
                 });
             }
         </script>
