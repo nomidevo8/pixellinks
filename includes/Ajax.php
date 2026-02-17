@@ -1079,6 +1079,59 @@ class Ajax {
             wp_send_json_error(['message' => 'Failed to update status']);
         }
 
+        // If status changed to success, attempt to send confirmation email to submitter
+        if ($status === 'success') {
+            $submission_row = $wpdb->get_row(
+                $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $submission_id),
+                ARRAY_A
+            );
+
+            if ($submission_row && is_email($submission_row['email'])) {
+                // Prefer named confirmation template, fallback to default or first enabled
+                $template_inst = EmailTemplate::get_by_slug('payment_success_template');
+
+                if (!$template_inst) {
+                    $all = EmailTemplate::get_all();
+                    $fallback = null;
+                    foreach ($all as $t) {
+                        if (!empty($t['is_default'])) { $fallback = $t; break; }
+                    }
+                    if (!$fallback && !empty($all)) { $fallback = $all[0]; }
+                    if ($fallback) {
+                        $template_inst = new EmailTemplate(intval($fallback['id']));
+                    }
+                }
+
+                if ($template_inst && $template_inst->get_id()) {
+                    $values = [
+                        'client_name'   => trim(($submission_row['first_name'] ?? '') . ' ' . ($submission_row['last_name'] ?? '')),
+                        'client_email'  => $submission_row['email'] ?? '',
+                        'business_name' => $submission_row['business_name'] ?? '',
+                        'service_name'  => $submission_row['service_id'] ?? ($submission_row['entity_type'] ?? ''),
+                        'total_price'   => !empty($submission_row['total_price']) ? '$' . number_format(floatval($submission_row['total_price']), 2) : '$0.00',
+                        'submission_id' => $submission_row['id'],
+                        'submission_date' => isset($submission_row['created_at']) ? date_format(date_create($submission_row['created_at']), 'M d, Y') : '',
+                    ];
+
+                    $rendered_html = $template_inst->render($values);
+                    $rendered_subject = $template_inst->get('template_subject') ?: 'Submission Update';
+
+                    // Replace subject tags
+                    foreach ($values as $k => $v) {
+                        $rendered_subject = str_ireplace('[' . strtoupper($k) . ']', $v, $rendered_subject);
+                        $rendered_subject = str_ireplace('[' . $k . ']', $v, $rendered_subject);
+                    }
+
+                    $headers = [
+                        'Content-Type: text/html; charset=UTF-8',
+                        'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+                    ];
+
+                    wp_mail($submission_row['email'], $rendered_subject, $rendered_html, $headers);
+                }
+            }
+        }
+
         wp_send_json_success(['message' => 'Status updated']);
     }
 
