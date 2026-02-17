@@ -35,6 +35,9 @@ class Plugin {
         // Create database tables
         Database::create_tables();
         
+        // Create default email templates
+        EmailTemplate::create_default_templates();
+        
         // Set plugin version
         update_option('dsf_plugin_version', DSF_PLUGIN_VERSION);
         update_option('dsf_db_version', DSF_DB_VERSION);
@@ -54,6 +57,10 @@ class Plugin {
      */
     public static function init() {
         self::instance()->setup();
+                // Create database tables
+        // Database::create_tables();
+                // Create default email templates
+        // EmailTemplate::create_default_templates();
     }
 
     /**

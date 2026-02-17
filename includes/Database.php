@@ -158,6 +158,23 @@ class Database {
             KEY created_at (created_at)
         ) $charset_collate;";
         
+        // Email Templates table
+        $email_templates_table = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}dsf_email_templates (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+            template_name VARCHAR(255) NOT NULL UNIQUE,
+            template_slug VARCHAR(255) NOT NULL UNIQUE,
+            template_subject VARCHAR(255) NOT NULL,
+            template_html LONGTEXT NOT NULL,
+            template_css LONGTEXT,
+            description LONGTEXT,
+            is_default TINYINT(1) NOT NULL DEFAULT 0,
+            enabled TINYINT(1) NOT NULL DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            KEY is_default (is_default),
+            KEY enabled (enabled)
+        ) $charset_collate;";
+        
         // Execute table creation
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($services_table);
@@ -167,6 +184,7 @@ class Database {
         dbDelta($service_location_pricing_table);
         dbDelta($portals_table);
         dbDelta($submissions_table);
+        dbDelta($email_templates_table);
     }
 
     /**
@@ -175,6 +193,7 @@ class Database {
     public static function drop_tables() {
         global $wpdb;
         
+        $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_email_templates");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_submissions");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_portals");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_service_package_pricing");

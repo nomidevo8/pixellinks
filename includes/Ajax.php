@@ -38,6 +38,9 @@ class Ajax {
         add_action('wp_ajax_dsf_get_submission_details', [$this, 'get_submission_details']);
         add_action('wp_ajax_dsf_get_wpforms_submission_details', [$this, 'get_wpforms_submission_details']);
         
+        add_action('wp_ajax_dsf_get_template_preview', [$this, 'get_template_preview']);
+        add_action('wp_ajax_dsf_get_dynamic_tags', [$this, 'get_dynamic_tags']);
+        
         add_action('dsf_form_submitted', [$this, 'send_submission_email'], 10, 5);
     }
 
@@ -959,6 +962,60 @@ class Ajax {
         
         wp_send_json_success([
             'html' => ob_get_clean(),
+        ]);
+    }
+
+    /**
+     * Get template preview via AJAX
+     */
+    public function get_template_preview() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $template_html = isset($_POST['template_html']) ? wp_kses_post($_POST['template_html']) : '';
+        $template_css = isset($_POST['template_css']) ? wp_kses_post($_POST['template_css']) : '';
+        
+        // Sample replacement values for preview
+        $sample_values = [
+            'CLIENT_NAME'      => 'John Doe',
+            'CLIENT_EMAIL'     => 'john@example.com',
+            'BUSINESS_NAME'    => 'ABC Corporation',
+            'SERVICE_NAME'     => 'LLC Formation',
+            'TOTAL_PRICE'      => '$500.00',
+            'YOUR_NAME'        => 'Jane Smith',
+            'YOUR_TITLE'       => 'Business Consultant',
+        ];
+        
+        // Replace tags
+        $html = $template_html;
+        foreach ($sample_values as $key => $value) {
+            $html = str_replace('[' . $key . ']', $value, $html);
+            $html = str_replace('[' . strtolower($key) . ']', $value, $html);
+        }
+        
+        // Add CSS
+        if ($template_css) {
+            $html = preg_replace(
+                '/<\/head>/i',
+                '<style>' . $template_css . '</style></head>',
+                $html
+            );
+        }
+        
+        wp_send_json_success([
+            'html' => $html,
+        ]);
+    }
+
+    /**
+     * Get available dynamic tags via AJAX
+     */
+    public function get_dynamic_tags() {
+        check_ajax_referer('dsf_form_nonce', 'nonce');
+        
+        $tags = EmailTemplate::get_available_tags();
+        
+        wp_send_json_success([
+            'tags' => $tags,
         ]);
     }
 }

@@ -9,6 +9,7 @@ use DSF\Admin_Pages\LocationPricingMenu;
 use DSF\Admin_Pages\PortalsMenu;
 use DSF\Admin_Pages\SubmissionsMenu;
 use DSF\Admin_Pages\WpFormsMenu;
+use DSF\Admin_Pages\EmailTemplatesMenu;
 use DSF\Admin_Pages\SettingsMenu;
 use DSF\Admin_Pages\Utils\DevDisplay;
 /**
@@ -29,6 +30,7 @@ class Admin {
     use PortalsMenu;
     use SubmissionsMenu;
     use WpFormsMenu;
+    use EmailTemplatesMenu;
     use SettingsMenu;
     use DevDisplay;
     /**
@@ -102,6 +104,16 @@ class Admin {
             'manage_options',
             'dsf-settings',
             [$this, 'page_settings']
+        );
+
+        // Email Templates submenu
+        add_submenu_page(
+            'dsf-submit-services',
+            __('Email Templates', 'dynamic-services-form'),
+            __('Email Templates', 'dynamic-services-form'),
+            'manage_options',
+            'dsf-email-templates',
+            [$this, 'page_email_templates']
         );
 
         // Services submenu
