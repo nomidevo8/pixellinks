@@ -1090,13 +1090,18 @@ class Ajax {
         $form_data = json_decode($submission['form_data'], true);
         $service = new Service($submission['service_id']);
 
+        // Helper function to convert slug to human-readable format
+        $slugToHuman = function($slug) {
+            return ucwords(str_replace(['-', '_'], ' ', $slug));
+        };
+
         // Build template context data
         $template_data = [
             'CLIENT_NAME' => $submission['first_name'] . ' ' . $submission['last_name'],
             'CLIENT_EMAIL' => $submission['email'],
             'BUSINESS_NAME' => $submission['business_name'],
-            'SERVICE_NAME' => $service->get('name'),
-            'SERVICE_TYPE' => $form_data['service_type'] ?? '',
+            'SERVICE_NAME' => $slugToHuman($service->get('name')),
+            'SERVICE_TYPE' => $slugToHuman($form_data['service_type'] ?? ''),
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
             'YOUR_NAME' => get_bloginfo('admin_email'), 
             'YOUR_TITLE' => 'Business Manager',
