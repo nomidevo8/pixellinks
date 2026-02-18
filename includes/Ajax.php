@@ -845,6 +845,14 @@ class Ajax {
         $fields = $form_data['fields'] ?? [];
 
         ob_start();
+           // If we have WP Forms form/entry IDs, provide a quick link to the full WPForms admin entry
+        $entry_form_id = intval($form_data['form_id'] ?? $submission['form_id'] ?? 0);
+        $entry_entry_id = intval($submission['entry_id'] ?? $form_data['entry_id'] ?? 0);
+        if ($entry_entry_id) {
+            $entry_link = admin_url('admin.php?page=wpforms-entries&view=details&entry_id=' . $entry_entry_id);
+            echo '<div style="text-align:right;margin-bottom:12px;"><a href="' . esc_url($entry_link) . '" target="_blank" class="button">View Full WPForms Entry</a></div>';
+        }
+
         ?>
         <div class="dsf-wpforms-section">
             <h3>👤 Personal Information</h3>
