@@ -1203,7 +1203,7 @@ class Ajax {
         $template_data = [
             'CLIENT_NAME' => $submission['first_name'] . ' ' . $submission['last_name'],
             'CLIENT_EMAIL' => $submission['email'],
-            'BUSINESS_NAME' => $submission['business_name'],
+            'BUSINESS_NAME' => $submission['business_name'] ?? '',
             'SERVICE_NAME' => $service_name,
             'SERVICE_TYPE' => $form_data['service_type'] ?? 'Business Registration',
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
@@ -1212,8 +1212,8 @@ class Ajax {
             'COMPANY_NAME' => get_bloginfo('name'),
             'SUBMISSION_DATE' => date_format(date_create($submission['created_at']), 'M d, Y'),
             'SUBMISSION_ID' => $submission['id'],
-            'BUSINESS_ADDRESS' => $submission['business_address'],
-            'BUSINESS_PHONE' => $submission['phone'],
+            'BUSINESS_ADDRESS' => $submission['business_address'] ?? '',
+            'BUSINESS_PHONE' => $submission['phone'] ?? '',
         ];
 
         // Helper function to convert slug to human-readable format

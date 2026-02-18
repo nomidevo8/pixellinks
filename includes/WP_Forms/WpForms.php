@@ -205,7 +205,6 @@ class WpForms {
             ]
         );
 
-        error_log( 'WP Forms submission saved: Entry ID ' . $entry_id . ', Submission ID: ' . $wpdb->insert_id );
     }
 
 }
