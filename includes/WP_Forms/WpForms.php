@@ -177,7 +177,7 @@ class WpForms {
                 'entry_id'     => $entry_id,
                 'fields'       => $fields,
             ] ),
-            'status'           => 'pending',
+            'status'           => 'unpaid',
             'created_at'       => current_time( 'mysql' ),
         ];
 

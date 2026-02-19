@@ -123,7 +123,7 @@ class Ajax {
                 'state' => $form_data['state'],
                 'zipcode' => $form_data['zipcode'],
                 'notes' => $form_data['notes'],
-                'status' => 'pending',
+                'status' => 'unpaid',
             ],
             ['%d', '%s', '%f', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
         );
