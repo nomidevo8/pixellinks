@@ -144,11 +144,8 @@ trait WpFormsMenu {
                                     <?php echo (isset($submission['discount_percentage']) && $submission['discount_percentage'] !== null && $submission['discount_percentage'] !== '') ? number_format((float)$submission['discount_percentage'], 2) . '%' : '--'; ?>
                                 </td>
                                 <td>
-                                    <select onchange="updateSubmissionStatus(<?php echo intval( $submission['id'] ); ?>, 'wpforms_submissions', this)" style="width: 100%;">
-                                        <?php $statuses = ['pending','success','failed','canceled']; foreach($statuses as $st): ?>
-                                            <option value="<?php echo esc_attr($st); ?>" <?php selected($submission['status'], $st); ?>><?php echo esc_html(ucfirst($st)); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <?php $s = $submission['status'] ?: 'unpaid'; ?>
+                                    <span class="status-chip status-<?php echo esc_attr($s); ?>" style="cursor: pointer; padding:2px 10px; border-radius:999px; font-weight:600; display: inline-block;" onclick="showWpformsSubmissionModal(<?php echo intval( $submission['id'] ); ?>)"><?php echo esc_html(ucfirst($s)); ?></span>
                                 </td>
                                 <td>
                                     <button type="button" class="button button-small" onclick="showWpformsSubmissionModal(<?php echo intval( $submission['id'] ); ?>)" style="margin-right: 5px;">
@@ -275,6 +272,10 @@ trait WpFormsMenu {
                 font-size: 32px;
                 font-weight: 700;
             }
+            .status-chip { color: #fff; font-size: 12px; }
+            .status-unpaid { background: #95a5a6; font-size: 12px; }
+            .status-partial { background: #f39c12; font-size: 12px;}
+            .status-paid { background: #27ae60; font-size: 12px; }
         </style>
 
         <script>
@@ -504,7 +505,7 @@ trait WpFormsMenu {
                 .then(data => {
                     selectEl.disabled = false;
                     if (data.success) {
-                        showToast('Status updated', 'success');
+                        showToast('Status updated', 'success'); 
                     } else {
                         showToast('Failed to update status: ' + (data.data?.message || 'Unknown error'), 'error');
                     }
@@ -512,6 +513,41 @@ trait WpFormsMenu {
                 .catch(() => {
                     selectEl.disabled = false;
                     showToast('Failed to update status', 'error');
+                });
+            }
+
+            function updateWpformsSubmissionFromModal(submissionId, table) {
+                const status = document.getElementById('dsf-wpforms-admin-status')?.value;
+                const totalPaid = document.getElementById('dsf-wpforms-admin-total-paid')?.value;
+                const discount = document.getElementById('dsf-wpforms-admin-discount')?.value;
+
+                let params = new URLSearchParams();
+                params.append('action', 'dsf_update_submission_status');
+                params.append('nonce', dsf_admin_nonce);
+                params.append('submission_id', submissionId);
+                params.append('table', table);
+                if (status) params.append('status', status);
+                if (totalPaid !== null && totalPaid !== '') params.append('total_paid', totalPaid);
+                if (discount !== null && discount !== '') params.append('discount_percentage', discount);
+                const body = params.toString();
+
+                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: body
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Submission updated', 'success');
+                        setTimeout(() => { location.reload(); }, 600);
+                    } else {
+                        showToast('Failed to update: ' + (data.data?.message || 'Unknown error'), 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Update failed', 'error');
                 });
             }
         </script>

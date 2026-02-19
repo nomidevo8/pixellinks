@@ -810,6 +810,37 @@ class Ajax {
             </div>
         </div>
         <?php endif; ?>
+        
+        <!-- Admin controls -->
+        <div class="dsf-submission-section">
+            <h3>⚙️ Admin Controls</h3>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Status:</div>
+                <div class="dsf-info-value">
+                    <select id="dsf-admin-status" style="width: 200px;">
+                        <?php $admin_statuses = ['unpaid','partial','paid']; foreach($admin_statuses as $st): ?>
+                            <option value="<?php echo esc_attr($st); ?>" <?php selected($submission['status'], $st); ?>><?php echo esc_html(ucfirst($st)); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Total Paid:</div>
+                <div class="dsf-info-value">
+                    <input id="dsf-admin-total-paid" type="number" step="0.01" style="width: 200px; padding:6px;" value="<?php echo esc_attr($submission['total_paid'] !== null ? $submission['total_paid'] : ''); ?>">
+                </div>
+            </div>
+            <div class="dsf-info-row">
+                <div class="dsf-info-label">Discount (%):</div>
+                <div class="dsf-info-value">
+                    <input id="dsf-admin-discount" type="number" step="0.01" style="width: 200px; padding:6px;" value="<?php echo esc_attr($submission['discount_percentage'] !== null ? $submission['discount_percentage'] : ''); ?>">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="button" class="button button-primary" onclick="updateSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'submissions')">Update</button>
+                <button type="button" class="button" onclick="closeSubmissionModal()">Close</button>
+            </div>
+        </div>
         <?php
         
         wp_send_json_success([
@@ -970,6 +1001,37 @@ class Ajax {
             </div>
         </div>
         <?php endif; ?>
+        
+        <!-- Admin controls -->
+        <div class="dsf-wpforms-section">
+            <h3>⚙️ Admin Controls</h3>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Status:</div>
+                <div class="dsf-wpforms-info-value">
+                    <select id="dsf-wpforms-admin-status" style="width: 200px;">
+                        <?php $admin_statuses = ['unpaid','partial','paid']; foreach($admin_statuses as $st): ?>
+                            <option value="<?php echo esc_attr($st); ?>" <?php selected($submission['status'], $st); ?>><?php echo esc_html(ucfirst($st)); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Total Paid:</div>
+                <div class="dsf-wpforms-info-value">
+                    <input id="dsf-wpforms-admin-total-paid" type="number" step="0.01" style="width: 200px; padding:6px;" value="<?php echo esc_attr($submission['total_paid'] !== null ? $submission['total_paid'] : ''); ?>">
+                </div>
+            </div>
+            <div class="dsf-wpforms-info-row">
+                <div class="dsf-wpforms-info-label">Discount (%):</div>
+                <div class="dsf-wpforms-info-value">
+                    <input id="dsf-wpforms-admin-discount" type="number" step="0.01" style="width: 200px; padding:6px;" value="<?php echo esc_attr($submission['discount_percentage'] !== null ? $submission['discount_percentage'] : ''); ?>">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button type="button" class="button button-primary" onclick="updateWpformsSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'wpforms_submissions')">Update</button>
+                <button type="button" class="button" onclick="closeWpformsSubmissionModal()">Close</button>
+            </div>
+        </div>
         <?php
         
         wp_send_json_success([
@@ -1061,9 +1123,11 @@ class Ajax {
 
         $submission_id = isset($_POST['submission_id']) ? intval($_POST['submission_id']) : 0;
         $table = isset($_POST['table']) ? sanitize_text_field($_POST['table']) : '';
-        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : null;
+        $total_paid = isset($_POST['total_paid']) ? floatval($_POST['total_paid']) : null;
+        $discount_percentage = isset($_POST['discount_percentage']) ? floatval($_POST['discount_percentage']) : null;
 
-        if (!$submission_id || !$table || !$status) {
+        if (!$submission_id || !$table || ($status === null && $total_paid === null && $discount_percentage === null)) {
             wp_send_json_error(['message' => 'Invalid parameters']);
         }
 
@@ -1076,11 +1140,30 @@ class Ajax {
         global $wpdb;
         $table_name = Database::get_table($table);
 
+        // Build update payload dynamically
+        $data = [];
+        $format = [];
+        if ($status !== null) {
+            $data['status'] = $status;
+            $format[] = '%s';
+        }
+        if ($total_paid !== null) {
+            $data['total_paid'] = $total_paid;
+            $format[] = '%f';
+        }
+        if ($discount_percentage !== null) {
+            $data['discount_percentage'] = $discount_percentage;
+            $format[] = '%f';
+        }
+        // always update updated_at
+        $data['updated_at'] = current_time('mysql');
+        $format[] = '%s';
+
         $updated = $wpdb->update(
             $table_name,
-            [ 'status' => $status, 'updated_at' => current_time('mysql') ],
+            $data,
             [ 'id' => $submission_id ],
-            [ '%s', '%s' ],
+            $format,
             [ '%d' ]
         );
 
@@ -1088,61 +1171,58 @@ class Ajax {
             wp_send_json_error(['message' => 'Failed to update status']);
         }
 
-        // If status changed to success, attempt to send confirmation email to submitter
-        if ($status === 'success') {
-            $submission_row = $wpdb->get_row(
-                $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $submission_id),
-                ARRAY_A
-            );
+        // If status changed to paid, attempt to send confirmation email to submitter
+        // if ($status === 'paid') {
+        //     $submission_row = $wpdb->get_row(
+        //         $wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $submission_id),
+        //         ARRAY_A
+        //     );
 
-            if ($submission_row && is_email($submission_row['email'])) {
-                // Prefer named confirmation template, fallback to default or first enabled
-                $template_inst = EmailTemplate::get_by_slug('payment_success_template');
+        //     if ($submission_row && is_email($submission_row['email'])) {
+        //         $template_inst = EmailTemplate::get_by_slug('payment_success_template');
 
-                if (!$template_inst) {
-                    $all = EmailTemplate::get_all();
-                    $fallback = null;
-                    foreach ($all as $t) {
-                        if (!empty($t['is_default'])) { $fallback = $t; break; }
-                    }
-                    if (!$fallback && !empty($all)) { $fallback = $all[0]; }
-                    if ($fallback) {
-                        $template_inst = new EmailTemplate(intval($fallback['id']));
-                    }
-                }
-                // Prepare template data for rendering
-                $form_data = json_decode($submission_row['form_data'], true);
-                if ($template_inst && $template_inst->get_id()) {
-                    $values = [
-                        'client_name'   => trim(($submission_row['first_name'] ?? '') . ' ' . ($submission_row['last_name'] ?? '')),
-                        'client_email'  => $submission_row['email'] ?? '',
-                        'business_name' => $submission_row['business_name'] ?? '',
-                        'service_name'  => $submission_row['entity_type'] ?? '',
-                        'service_type'  => $form_data['service_type'] ?? 'Business',
-                        'service_category' => $form_data['service_category'] ?? 'Registration',
-                        'total_price'   => !empty($submission_row['total_price']) ? '$' . number_format(floatval($submission_row['total_price']), 2) : '$0.00',
-                        'submission_id' => $submission_row['id'],
-                        'submission_date' => isset($submission_row['created_at']) ? date_format(date_create($submission_row['created_at']), 'M d, Y') : '',
-                    ];
+        //         if (!$template_inst) {
+        //             $all = EmailTemplate::get_all();
+        //             $fallback = null;
+        //             foreach ($all as $t) {
+        //                 if (!empty($t['is_default'])) { $fallback = $t; break; }
+        //             }
+        //             if (!$fallback && !empty($all)) { $fallback = $all[0]; }
+        //             if ($fallback) {
+        //                 $template_inst = new EmailTemplate(intval($fallback['id']));
+        //             }
+        //         }
+        //         $form_data = json_decode($submission_row['form_data'], true);
+        //         if ($template_inst && $template_inst->get_id()) {
+        //             $values = [
+        //                 'client_name'   => trim(($submission_row['first_name'] ?? '') . ' ' . ($submission_row['last_name'] ?? '')),
+        //                 'client_email'  => $submission_row['email'] ?? '',
+        //                 'business_name' => $submission_row['business_name'] ?? '',
+        //                 'service_name'  => $submission_row['entity_type'] ?? '',
+        //                 'service_type'  => $form_data['service_type'] ?? 'Business',
+        //                 'service_category' => $form_data['service_category'] ?? 'Registration',
+        //                 'total_price'   => !empty($submission_row['total_price']) ? '$' . number_format(floatval($submission_row['total_price']), 2) : '$0.00',
+        //                 'submission_id' => $submission_row['id'],
+        //                 'submission_date' => isset($submission_row['created_at']) ? date_format(date_create($submission_row['created_at']), 'M d, Y') : '',
+        //             ];
 
-                    $rendered_html = $template_inst->render($values);
-                    $rendered_subject = $template_inst->get('template_subject') ?: 'Submission Update';
+        //             $rendered_html = $template_inst->render($values);
+        //             $rendered_subject = $template_inst->get('template_subject') ?: 'Submission Update';
 
-                    // Replace subject tags
-                    foreach ($values as $k => $v) {
-                        $rendered_subject = str_ireplace('[' . strtoupper($k) . ']', $v, $rendered_subject);
-                        $rendered_subject = str_ireplace('[' . $k . ']', $v, $rendered_subject);
-                    }
+        //             foreach ($values as $k => $v) {
+        //                 $rendered_subject = str_ireplace('[' . strtoupper($k) . ']', $v, $rendered_subject);
+        //                 $rendered_subject = str_ireplace('[' . $k . ']', $v, $rendered_subject);
+        //             }
 
-                    $headers = [
-                        'Content-Type: text/html; charset=UTF-8',
-                        'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
-                    ];
+        //             $headers = [
+        //                 'Content-Type: text/html; charset=UTF-8',
+        //                 'From: ' . get_bloginfo('name') . ' <' . get_option('admin_email') . '>'
+        //             ];
 
-                    wp_mail($submission_row['email'], $rendered_subject, $rendered_html, $headers);
-                }
-            }
-        }
+        //             wp_mail($submission_row['email'], $rendered_subject, $rendered_html, $headers);
+        //         }
+        //     }
+        // }
 
         wp_send_json_success(['message' => 'Status updated']);
     }
