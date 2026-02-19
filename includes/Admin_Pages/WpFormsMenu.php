@@ -93,6 +93,8 @@ trait WpFormsMenu {
                         <th style="width: 13%;"><?php esc_html_e( 'Business Name', 'dynamic-services-form' ); ?></th>
                         <th style="width: 10%;"><?php esc_html_e( 'Entity Type', 'dynamic-services-form' ); ?></th>
                         <th style="width: 10%;"><?php esc_html_e( 'Total Price', 'dynamic-services-form' ); ?></th>
+                        <th style="width: 10%;"><?php esc_html_e( 'Total Paid', 'dynamic-services-form' ); ?></th>
+                        <th style="width: 8%;"><?php esc_html_e( 'Discount', 'dynamic-services-form' ); ?></th>
                         <th style="width: 12%;"><?php esc_html_e( 'Status', 'dynamic-services-form' ); ?></th>
                         <th style="width: 15%;"><?php esc_html_e( 'Actions', 'dynamic-services-form' ); ?></th>
                     </tr>
@@ -100,7 +102,7 @@ trait WpFormsMenu {
                 <tbody>
                     <?php if ( empty( $submissions ) ) : ?>
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px;">
+                            <td colspan="10" style="text-align: center; padding: 20px;">
                                 <p style="color: #999;">
                                     <?php esc_html_e( 'No WP Forms submissions found.', 'dynamic-services-form' ); ?>
                                 </p>
@@ -130,8 +132,16 @@ trait WpFormsMenu {
                                 </td>
                                 <td>
                                     <strong style="color: #27ae60;">
-                                        <?php echo ! empty( $submission['total_price'] ) ? '$' . number_format( (float) $submission['total_price'], 2 ) : '--'; ?>
+                                        <?php echo isset($submission['total_price']) && $submission['total_price'] !== null ? '$' . number_format( (float) $submission['total_price'], 2 ) : '--'; ?>
                                     </strong>
+                                </td>
+                                <td>
+                                    <strong style="color: #27ae60;">
+                                        <?php echo isset($submission['total_paid']) && $submission['total_paid'] !== null ? '$' . number_format( (float) $submission['total_paid'], 2 ) : '--'; ?>
+                                    </strong>
+                                </td>
+                                <td>
+                                    <?php echo (isset($submission['discount_percentage']) && $submission['discount_percentage'] !== null && $submission['discount_percentage'] !== '') ? number_format((float)$submission['discount_percentage'], 2) . '%' : '--'; ?>
                                 </td>
                                 <td>
                                     <select onchange="updateSubmissionStatus(<?php echo intval( $submission['id'] ); ?>, 'wpforms_submissions', this)" style="width: 100%;">
