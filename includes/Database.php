@@ -148,6 +148,8 @@ class Database {
             state VARCHAR(50),
             zipcode VARCHAR(10),
             entity_type VARCHAR(100),
+            total_paid DECIMAL(10, 2) DEFAULT NULL,
+            discount_percentage DECIMAL(5, 2) DEFAULT NULL,
             notes LONGTEXT,
             status VARCHAR(50) NOT NULL DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -191,6 +193,8 @@ class Database {
             zipcode VARCHAR(10),
             entity_type VARCHAR(100),
             total_price DECIMAL(10, 2),
+            total_paid DECIMAL(10, 2) DEFAULT NULL,
+            discount_percentage DECIMAL(5, 2) DEFAULT NULL,
             notes LONGTEXT,
             form_data LONGTEXT,
             status VARCHAR(50) NOT NULL DEFAULT 'pending',
@@ -230,6 +234,40 @@ class Database {
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_service_location_pricing");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_locations");
         $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}dsf_services");
+    }
+
+    /**
+     * Ensure payment-related columns exist on submissions tables.
+     *
+     * Adds `total_paid` and `discount_percentage` to both `dsf_submissions`
+     * and `dsf_wpforms_submissions` if they do not already exist.
+     *
+     * @return array Results for each table/column added. Values are true/false or 'exists'.
+     */
+    public static function ensure_payment_columns() {
+        global $wpdb;
+        $results = [];
+        $tables = [ 'submissions', 'wpforms_submissions' ];
+        foreach ( $tables as $t ) {
+            $full = self::get_table( $t );
+            // total_paid
+            $has_total_paid = (bool) $wpdb->get_var( "SHOW COLUMNS FROM `{$full}` LIKE 'total_paid'" );
+            if ( ! $has_total_paid ) {
+                $q = "ALTER TABLE `{$full}` ADD COLUMN `total_paid` DECIMAL(10,2) DEFAULT NULL AFTER `entity_type`" ;
+                $results["{$full}.total_paid"] = ( $wpdb->query( $q ) !== false );
+            } else {
+                $results["{$full}.total_paid"] = 'exists';
+            }
+            // discount_percentage
+            $has_discount = (bool) $wpdb->get_var( "SHOW COLUMNS FROM `{$full}` LIKE 'discount_percentage'" );
+            if ( ! $has_discount ) {
+                $q2 = "ALTER TABLE `{$full}` ADD COLUMN `discount_percentage` DECIMAL(5,2) DEFAULT NULL AFTER `total_paid`" ;
+                $results["{$full}.discount_percentage"] = ( $wpdb->query( $q2 ) !== false );
+            } else {
+                $results["{$full}.discount_percentage"] = 'exists';
+            }
+        }
+        return $results;
     }
 
     /**

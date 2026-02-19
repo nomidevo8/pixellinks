@@ -59,6 +59,7 @@ class Plugin {
         self::instance()->setup();
                 // Create database tables
         // Database::create_tables();
+        // Database::ensure_payment_columns();
                 // Create default email templates
         // EmailTemplate::create_default_templates();
     }
