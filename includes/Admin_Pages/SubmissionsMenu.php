@@ -130,9 +130,17 @@ trait SubmissionsMenu {
                                     </strong>
                                 </td>
                                 <td>
-                                    <strong style="color: #27ae60;">
-                                        <?php echo isset($submission['total_paid']) && $submission['total_paid'] !== null ? '$' . number_format((float) $submission['total_paid'], 2) : '--'; ?>
+                                    <?php
+                                        $paid = isset($submission['total_paid']) && $submission['total_paid'] !== null ? floatval($submission['total_paid']) : 0;
+                                        $total = isset($submission['total_price']) && $submission['total_price'] !== null ? floatval($submission['total_price']) : 0;
+                                        $remaining = max($total - $paid, 0);
+                                    ?>
+                                    <strong style="color: #27ae60; display:block;">
+                                        <?php echo ($paid > 0) ? ('$' . number_format($paid, 2)) : '--'; ?>
                                     </strong>
+                                    <div style="font-size:12px; color:#555; margin-top:4px;">
+                                        Remaining: <?php echo $total > 0 ? '$' . number_format($remaining, 2) : '--'; ?>
+                                    </div>
                                 </td>
                                 <td>
                                     <?php echo (isset($submission['discount_percentage']) && $submission['discount_percentage'] !== null && $submission['discount_percentage'] !== '') ? number_format((float)$submission['discount_percentage'], 2) . '%' : '--'; ?>
@@ -142,15 +150,15 @@ trait SubmissionsMenu {
                                     <span class="status-chip status-<?php echo esc_attr($s); ?>" style="cursor: pointer; padding:2px 10px; border-radius:999px; font-weight:600; display: inline-block;" onclick="showSubmissionModal(<?php echo intval($submission['id']); ?>)"><?php echo esc_html(ucfirst($s)); ?></span>
                                 </td>
                                 <td>
-                                    <button type="button" class="button button-small" onclick="showSubmissionModal(<?php echo intval($submission['id']); ?>)" style="margin-right: 5px;">
-                                        👁️ View
+                                    <button type="button" class="button button-small" title="View" onclick="showSubmissionModal(<?php echo intval($submission['id']); ?>)" style="margin-right: 5px;">
+                                        👁️
                                     </button>
                                     <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this submission?');">
                                         <?php wp_nonce_field('dsf_admin_nonce', 'dsf_nonce'); ?>
                                         <input type="hidden" name="dsf_action" value="delete_submission">
                                         <input type="hidden" name="id" value="<?php echo intval($submission['id']); ?>">
-                                        <button type="submit" name="dsf_delete_submission" class="button button-small button-link-delete">
-                                            🗑️ Delete
+                                        <button type="submit" name="dsf_delete_submission" class="button button-small button-link-delete" title="Delete">
+                                            🗑️
                                         </button>
                                     </form>
                                 </td>
@@ -531,6 +539,8 @@ trait SubmissionsMenu {
                 if (totalPaid !== null && totalPaid !== '') params.append('total_paid', totalPaid);
                 if (discount !== null && discount !== '') params.append('discount_percentage', discount);
                 const body = params.toString();
+                const btn = document.getElementById('dsf-admin-update-btn');
+                if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
 
                 fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
                     method: 'POST',
@@ -539,15 +549,29 @@ trait SubmissionsMenu {
                 })
                 .then(r => r.json())
                 .then(data => {
+                    const btn = document.getElementById('dsf-admin-update-btn');
                     if (data.success) {
                         showToast('Submission updated', 'success');
-                        // refresh to reflect changes in listing
+                        // keep button disabled while reloading
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.textContent = 'Updated';
+                        }
                         setTimeout(() => { location.reload(); }, 600);
                     } else {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.textContent = 'Update';
+                        }
                         showToast('Failed to update: ' + (data.data?.message || 'Unknown error'), 'error');
                     }
                 })
                 .catch(err => {
+                    const btn = document.getElementById('dsf-admin-update-btn');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = 'Update';
+                    }
                     console.error(err);
                     showToast('Update failed', 'error');
                 });

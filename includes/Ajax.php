@@ -837,7 +837,7 @@ class Ajax {
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button type="button" class="button button-primary" onclick="updateSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'submissions')">Update</button>
+                <button id="dsf-admin-update-btn" type="button" class="button button-primary" onclick="updateSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'submissions')">Update</button>
                 <button type="button" class="button" onclick="closeSubmissionModal()">Close</button>
             </div>
         </div>
@@ -1028,7 +1028,7 @@ class Ajax {
                 </div>
             </div>
             <div style="display:flex; gap:10px; margin-top:10px;">
-                <button type="button" class="button button-primary" onclick="updateWpformsSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'wpforms_submissions')">Update</button>
+                <button id="dsf-wpforms-admin-update-btn" type="button" class="button button-primary" onclick="updateWpformsSubmissionFromModal(<?php echo intval($submission['id']); ?>, 'wpforms_submissions')">Update</button>
                 <button type="button" class="button" onclick="closeWpformsSubmissionModal()">Close</button>
             </div>
         </div>
