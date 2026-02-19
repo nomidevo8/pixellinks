@@ -116,6 +116,7 @@ class Ajax {
                 'last_name' => $form_data['last_name'],
                 'business_name' => $form_data['business_name'],
                 'business_address' => $form_data['business_address'],
+                'entity_type' => $service_name,
                 'phone' => $form_data['phone'],
                 'email' => $form_data['email'],
                 'city' => $form_data['city'],
@@ -1109,13 +1110,16 @@ class Ajax {
                         $template_inst = new EmailTemplate(intval($fallback['id']));
                     }
                 }
-
+                // Prepare template data for rendering
+                $form_data = json_decode($submission_row['form_data'], true);
                 if ($template_inst && $template_inst->get_id()) {
                     $values = [
                         'client_name'   => trim(($submission_row['first_name'] ?? '') . ' ' . ($submission_row['last_name'] ?? '')),
                         'client_email'  => $submission_row['email'] ?? '',
                         'business_name' => $submission_row['business_name'] ?? '',
-                        'service_name'  => $submission_row['service_id'] ?? ($submission_row['entity_type'] ?? ''),
+                        'service_name'  => $submission_row['entity_type'] ?? '',
+                        'service_type'  => $form_data['service_type'] ?? 'Business',
+                        'service_category' => $form_data['service_category'] ?? 'Registration',
                         'total_price'   => !empty($submission_row['total_price']) ? '$' . number_format(floatval($submission_row['total_price']), 2) : '$0.00',
                         'submission_id' => $submission_row['id'],
                         'submission_date' => isset($submission_row['created_at']) ? date_format(date_create($submission_row['created_at']), 'M d, Y') : '',
@@ -1206,6 +1210,7 @@ class Ajax {
             'BUSINESS_NAME' => $submission['business_name'] ?? '',
             'SERVICE_NAME' => $service_name,
             'SERVICE_TYPE' => $form_data['service_type'] ?? 'Business Registration',
+            'SERVICE_CATEGORY' => $form_data['service_category'] ?? 'Business Registration',
             'TOTAL_PRICE' => '$' . number_format(floatval($submission['total_price']), 2),
             'YOUR_NAME' => get_bloginfo('admin_email'), 
             'YOUR_TITLE' => 'Business Manager',
