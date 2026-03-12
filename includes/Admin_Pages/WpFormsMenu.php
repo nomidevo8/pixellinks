@@ -153,7 +153,9 @@ trait WpFormsMenu {
                                 </td>
                                 <td>
                                     <?php $s = $submission['status'] ?: 'unpaid'; ?>
-                                    <span class="status-chip status-<?php echo esc_attr($s); ?>" style="cursor: pointer; padding:2px 10px; border-radius:999px; font-weight:600; display: inline-block;" onclick="showWpformsSubmissionModal(<?php echo intval( $submission['id'] ); ?>)"><?php echo esc_html(ucfirst($s)); ?></span>
+                                    <span class="status-chip status-<?php echo esc_attr($s); ?>" style="cursor: pointer; padding:2px 10px; border-radius:999px; font-weight:600; display: inline-block;">
+                                        <?php echo esc_html(ucfirst($s)); ?>
+                                    </span>
                                 </td>
                                 <td>
                                     <button type="button" class="button button-small" title="View" onclick="showWpformsSubmissionModal(<?php echo intval( $submission['id'] ); ?>)" style="margin-right: 5px;">
