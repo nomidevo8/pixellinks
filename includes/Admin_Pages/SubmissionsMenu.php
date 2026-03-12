@@ -584,6 +584,11 @@ trait SubmissionsMenu {
      * Delete submission
      */
     private function delete_submission() {
+        // security check - admin nonce from the form
+        if ( empty( $_POST['dsf_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( $_POST['dsf_nonce'] ), 'dsf_admin_nonce' ) ) {
+            wp_die( 'Security check failed' );
+        }
+
         $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
         if ($id) {
             global $wpdb;
@@ -593,7 +598,8 @@ trait SubmissionsMenu {
                 ['%d']
             );
         }
-        wp_redirect(admin_url('admin.php?page=dsf-submissions'));
+        // redirect back to the submissions screen (slug is dsf-submit-services)
+        wp_redirect(admin_url('admin.php?page=dsf-submit-services'));
         exit;
     }
 }

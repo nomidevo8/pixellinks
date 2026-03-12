@@ -231,6 +231,10 @@ class Admin {
             case 'delete_wpforms_submission':
                 $this->delete_wpforms_submission();
                 break;
+            case 'delete_submission':
+                // let the SubmissionsMenu trait handle the actual removal and redirect
+                $this->delete_submission();
+                break;
         }
     }
 
