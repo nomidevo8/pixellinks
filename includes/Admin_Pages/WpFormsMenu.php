@@ -283,6 +283,7 @@ trait WpFormsMenu {
                 font-weight: 700;
             }
             .status-chip { color: #fff; font-size: 12px; }
+            .status-pending { background: #3498db; font-size: 12px; }
             .status-unpaid { background: #95a5a6; font-size: 12px; }
             .status-partial { background: #f39c12; font-size: 12px;}
             .status-paid { background: #27ae60; font-size: 12px; }
